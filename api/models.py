@@ -51,4 +51,4 @@ class Software(db.Model):
         return serialize(self, ['user_id'])
 
     def __repr__(self):
-        return '<Feed %r>' % self.title
+        return '<Software %r>' % self.title

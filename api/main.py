@@ -7,9 +7,8 @@ from flask import request
 from flask import Flask
 import requests
 
-from models import FeedEntry
 from models import User
-from models import Feed
+from models import Software
 import authentication
 from models import db
 from app import app
@@ -46,6 +45,55 @@ def register():
     json_request = request.json
 
     username = json_request.get('username')
+    print(username)
+    unsecure_password = json_request.get('password')
+
+    if not username or not unsecure_password:
+        return {'status': '400'}
+
+    hashed_password = sha256_crypt.hash(unsecure_password)
+
+    try:
+        user = User(username=username, password=hashed_password)
+
+        db.session.add(user)
+        db.session.commit()
+
+        return {'status': '200'}
+    except:
+        db.session.rollback()
+        return {'status': '500'}
+
+@app.route('/create', methods=['POST'])
+def create():
+    json_request = request.json
+
+    username = json_request.get('username')
+    print(username)
+    unsecure_password = json_request.get('password')
+
+    if not username or not unsecure_password:
+        return {'status': '400'}
+
+    hashed_password = sha256_crypt.hash(unsecure_password)
+
+    try:
+        user = User(username=username, password=hashed_password)
+
+        db.session.add(user)
+        db.session.commit()
+
+        return {'status': '200'}
+    except:
+        db.session.rollback()
+        return {'status': '500'}
+
+@app.route('/register', methods=['POST'])
+def update():
+    json_request = request.json
+
+    username = json_request.get('username')
+    print(username)
     unsecure_password = json_request.get('password')
 
     if not username or not unsecure_password:
