@@ -1,0 +1,59 @@
+version: "3.7"
+
+networks:
+    gatherinfonet:
+        name: gatherinfonet
+        driver: bridge
+
+services:
+    database:
+        image: postgres:12
+        container_name: gatherinfo-database
+        hostname: database
+        networks:
+            - gatherinfonet
+        env_file:
+            - configs/postgres.env
+
+    redis:
+      image: redis:latest
+      container_name: gatherinfo-redis
+      hostname: redis
+      networks:
+        - gatherinfonet
+
+    api:
+        build: api/
+        image: gatherinfo-api:latest
+        container_name: gatherinfo-api
+        hostname: gatherinfo-api
+        networks:
+            - gatherinfonet
+        ports:
+            - "5000:8080"
+        env_file:
+            - configs/postgres.env
+        environment:
+            - FLASK_APP=main.py
+        depends_on:
+            - database
+
+    worker-api:
+        build: worker-api/
+        image: gatherinfo-worker-api:latest
+        container_name: gatherinfo-worker-api
+        hostname: gatherinfo-worker-api
+        networks:
+            - gatherinfonet
+        depends_on:
+            - redis
+
+    worker:
+        build: worker/
+        image: gatherinfo-worker:latest
+        container_name: gatherinfo-worker
+        hostname: gatherinfo-worker
+        networks:
+            - gatherinfonet
+        depends_on:
+            - redis
