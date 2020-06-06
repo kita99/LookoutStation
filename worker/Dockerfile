@@ -1,10 +1,10 @@
 FROM golang:latest
 
-COPY ./src /app/scannex
-RUN mkdir /app/scannex/bin
+COPY ./src /app
+RUN mkdir /app/bin
 ENV GOBIN /go/bin
 
-WORKDIR /app/scannex
+WORKDIR /app
 RUN go get -d ./...
 RUN go install
 
