@@ -77,7 +77,7 @@ def create_asset():
     asset = Asset.query.filter_by(uuid=uuid).first()
 
     if asset:
-        return {'status': 200}
+        return Response('{"response": "Device already exists", "status": "False"', status=200, mimetype='application/json')
 
     try:
         asset = Asset(
@@ -89,10 +89,10 @@ def create_asset():
         db.session.add(asset)
         db.session.commit()
 
-        return {'status': 201}
+        return Response('{"response": "Added new device", "status": "True"}', status=201, mimetype='application/json')
     except:
         db.session.rollback()
-        return {'status': 500}
+        return Response('{"response": "Exception happened", "status": "False"}', status=500, mimetype='application/json')
 
 
 @app.route('/assets/<uuid>', methods=['PUT'])
@@ -102,19 +102,23 @@ def update_asset(uuid):
 
     asset = Asset.query.filter_by(uuid=uuid).first()
 
+    print(asset)
+
     if not asset:
-        return {'status': 404}
+        return Response('{"response": "Invalid Device", "status": "False"}', status=404, mimetype='application/json')
 
     if not software_list:
-        return {'status': 400}
+        return Response('{"response": "Invalid data passed", "status": "False"}', status=400, mimetype='application/json')
 
     if not isinstance(software_list, list):
-        return {'status': 400}
+        return Response('{"response": "Invalid data passed", "status": "False"}', status=400, mimetype='application/json')
 
     try:
         for software in software_list:
 
-            sofware_entry = Software(
+            print(software)
+
+            software_entry = Software(
                 name=software['name'],
                 version=software['version']
             )
@@ -124,7 +128,7 @@ def update_asset(uuid):
         db.session.add(asset)
         db.session.commit()
 
-        return {'status': 200}
-    except:
+        return Response('{"response": "Software inserted", "status": "True"}', status=200, mimetype='application/json')
+    except Exception as e:
         db.session.rollback()
-        return {'status': 500}
+        return Response(f'{"response": {e}, "status": "False"}', status=500, mimetype='application/json')
