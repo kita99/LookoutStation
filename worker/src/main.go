@@ -5,6 +5,9 @@ import (
 	"time"
 	"fmt"
 	"strings"
+    "context"
+    "encoding/json"
+
     "./modules"
 
 	"github.com/adjust/rmq"
@@ -45,7 +48,9 @@ func NewWorker(tag int) *Worker {
 
 func (worker *Worker) Consume(delivery rmq.Delivery) {
     payload := delivery.Payload()
-    target, portRange := strings.Split(payload, ":")
+    split := strings.Split(payload, ":")
+    target := split[0]
+    portRange := split[1]
 
     log.Printf("Processing a scan:")
     log.Printf(payload)
@@ -79,6 +84,6 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
     delivery.Ack()
 
     jsonResponse, _ := json.Marshal(result.Hosts)
-    log.Printf(jsonResponse)
+    log.Println(jsonResponse)
 }
 
