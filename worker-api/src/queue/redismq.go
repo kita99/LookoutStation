@@ -5,8 +5,8 @@ import (
 )
 
 func PublishScan(queue string, message string) {
-    connection := rmq.OpenConnection("scannex-api-publisher", "tcp", "redis:6379", 1)
+    connection := rmq.OpenConnection("gatherinfo-publisher", "tcp", "redis:6379", 1)
+    taskQueue := connection.OpenQueue(queue)
 
-    scanQueue := connection.OpenQueue("scans")
-    scanQueue.Publish(message)
+    taskQueue.Publish(message)
 }

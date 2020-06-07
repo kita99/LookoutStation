@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"http"
 	"time"
 	"fmt"
 	"strings"
@@ -20,7 +21,7 @@ const (
 
 func main() {
     go status.Health()
-	connection := rmq.OpenConnection("scan-worker", "tcp", "redis:6379", 2)
+	connection := rmq.OpenConnection("gatherinfo-scan-worker", "tcp", "redis:6379", 1)
 	queue := connection.OpenQueue("scans")
 
 	queue.StartConsuming(10, 500*time.Millisecond)
@@ -66,6 +67,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
 		nmap.WithPorts(portRange),
 		nmap.WithContext(ctx),
 	)
+
 	if err != nil {
         delivery.Reject()
         delivery.Push()
@@ -84,6 +86,12 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
     delivery.Ack()
 
     jsonResponse, _ := json.Marshal(result.Hosts)
-    log.Println(jsonResponse)
-}
+    resp, err := http.Post("http://gatherinfo-api/scans/" + target, "application/json", bytes.NewBuffer(jsonResponse))
 
+	if err != nil {
+        delivery.Reject()
+        delivery.Push()
+
+		log.Fatalf("could not submit scan result: %v", err)
+	}
+}

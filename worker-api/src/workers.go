@@ -14,7 +14,7 @@ type Queue struct {
 }
 
 func QueueStatusCheck(w http.ResponseWriter, r *http.Request) {
-    resp, err := http.Get("http://scan-worker:8080/status")
+    resp, err := http.Get("http://gatherinfo-worker:8080/status")
 
     if err != nil {
         // handle error
