@@ -8,6 +8,7 @@ from flask import Flask
 import requests
 
 from models import User
+from models import Asset
 from models import Software
 import authentication
 from models import db
@@ -35,9 +36,9 @@ def login():
     user = authentication.authenticate(username, unsecure_password)
 
     if user:
-        return {'status': '200', 'token': authentication.generate_token(user.id)}
+        return {'status': 200, 'token': authentication.generate_token(user.id)}
 
-    return {'status': '401'}
+    return {'status': 401}
 
 
 @app.route('/register', methods=['POST'])
@@ -49,7 +50,7 @@ def register():
     unsecure_password = json_request.get('password')
 
     if not username or not unsecure_password:
-        return {'status': '400'}
+        return {'status': 400}
 
     hashed_password = sha256_crypt.hash(unsecure_password)
 
@@ -59,55 +60,71 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        return {'status': '200'}
+        return {'status': 200}
     except:
         db.session.rollback()
-        return {'status': '500'}
+        return {'status': 500}
 
-@app.route('/create', methods=['POST'])
-def create():
+
+@app.route('/assets', methods=['POST'])
+def create_asset():
     json_request = request.json
 
-    username = json_request.get('username')
-    print(username)
-    unsecure_password = json_request.get('password')
+    uuid = json_request.get('uuid')
+    private_ip = json_request.get('private_ip')
+    public_ip = json_request.get('public_ip')
 
-    if not username or not unsecure_password:
-        return {'status': '400'}
+    asset = Asset.query.filter_by(uuid=uuid).first()
 
-    hashed_password = sha256_crypt.hash(unsecure_password)
+    if asset:
+        return {'status': 200}
 
     try:
-        user = User(username=username, password=hashed_password)
+        asset = Asset(
+            uuid=uuid,
+            private_ip=private_ip,
+            public_ip=public_ip
+        )
 
-        db.session.add(user)
+        db.session.add(asset)
         db.session.commit()
 
-        return {'status': '200'}
+        return {'status': 201}
     except:
         db.session.rollback()
-        return {'status': '500'}
+        return {'status': 500}
 
-@app.route('/register', methods=['POST'])
-def update():
+
+@app.route('/assets/<uuid>', methods=['PUT'])
+def update_asset(uuid):
     json_request = request.json
+    software_list = json_request.get('software')
 
-    username = json_request.get('username')
-    print(username)
-    unsecure_password = json_request.get('password')
+    asset = Asset.query.filter_by(uuid=uuid).first()
 
-    if not username or not unsecure_password:
-        return {'status': '400'}
+    if not asset:
+        return {'status': 404}
 
-    hashed_password = sha256_crypt.hash(unsecure_password)
+    if not software_list:
+        return {'status': 400}
+
+    if not isinstance(software_list, list):
+        return {'status': 400}
 
     try:
-        user = User(username=username, password=hashed_password)
+        for software in software_list:
 
-        db.session.add(user)
+            sofware_entry = Software(
+                name=software['name'],
+                version=software['version']
+            )
+
+            asset.software.append(software_entry)
+
+        db.session.add(asset)
         db.session.commit()
 
-        return {'status': '200'}
+        return {'status': 200}
     except:
         db.session.rollback()
-        return {'status': '500'}
+        return {'status': 500}
