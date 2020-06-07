@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects import postgresql
 
 from app import app
 
@@ -34,15 +35,30 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
+class Asset(db.Model):
+    __tablename__ = 'assets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(120), nullable=False)
+    private_ip = db.Column(postgresql.INET, nullable=True)
+    public_ip = db.Column(postgresql.INET, nullable=True)
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<Asset %r>' % self.uuid
+
+
 class Software(db.Model):
     __tablename__ = 'software'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
     version = db.Column(db.String(80), nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    user = db.relationship('User', backref=db.backref('software', lazy=True), cascade='all', passive_deletes = True)
+    asset_id = db.Column(db.Integer, db.ForeignKey('assets.id', ondelete='CASCADE'))
+    asset = db.relationship('Asset', backref=db.backref('software', lazy=True), cascade='all', passive_deletes = True)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
