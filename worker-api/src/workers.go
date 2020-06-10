@@ -85,6 +85,6 @@ func QueueStatusCheck(w http.ResponseWriter, r *http.Request) {
 
     json_data, _ := json.Marshal(stats)
 
-    w.Header().Set("Conten-Type", "application/json")
+    w.Header().Set("Content-Type", "application/json")
     w.Write(json_data)
 }

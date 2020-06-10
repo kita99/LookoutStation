@@ -8,6 +8,7 @@ from flask import Flask
 import requests
 
 from models import User
+from models import Scan
 from models import Asset
 from models import Software
 import authentication
@@ -64,6 +65,18 @@ def register():
     except:
         db.session.rollback()
         return {'status': 500}
+
+
+@app.route('/assets/ips/public', methods=['GET'])
+def get_public_ips():
+    ips = []
+
+    assets = Asset.query.all()
+
+    for asset in assets:
+        ips.append(asset.public_ip)
+
+    return {'ips': ips}
 
 
 @app.route('/assets', methods=['POST'])
@@ -132,3 +145,31 @@ def update_asset(uuid):
     except Exception as e:
         db.session.rollback()
         return Response(f'{"response": {e}, "status": "False"}', status=500, mimetype='application/json')
+
+
+@app.route('/scans/<ip>', methods=['PUT'])
+def add_scans(ip):
+    json_request = request.json
+
+    ports = request.json.get('ports')
+
+    if not isinstance(ports, list):
+        return {'status': 400}
+
+    try:
+        for port in ports:
+            scan = Scan(
+                port=port['id'],
+                protocol=port['protocol'],
+                service_name=port['service']['name'],
+                state=port['state']['state'],
+                state_reason=port['state']['reason']
+            )
+
+        db.session.add(asset)
+        db.session.commit()
+
+        return Response('{"response": "Software inserted", "status": "True"}', status=200, mimetype='application/json')
+    except:
+        db.session.rollback()
+        return Response('{"response": "Exception happened", "status": "False"}', status=500, mimetype='application/json')

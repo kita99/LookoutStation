@@ -71,15 +71,14 @@ class Software(db.Model):
 
 
 class Scan(db.Model):
-    __tablename = 'scans'
+    __tablename__ = 'scans'
 
     id = db.Column(db.Integer, primary_key=True)
     port = db.Column(db.Integer, nullable=False)
     protocol = db.Column(db.String(5), nullable=False)
     service_name = db.Column(db.String(10), nullable=False)
-
-    asset_id = db.Column(db.Integer, db.ForeignKey('assets.id', ondelete='CASCADE'))
-    asset = db.relationship('Asset', backref=db.backref('scans', lazy=True), cascade='all', passive_deletes = True)
+    state = db.Column(db.String(10), nullable=False)
+    reason = db.Column(db.String(10), nullable=False)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
