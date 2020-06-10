@@ -53,7 +53,12 @@ class Client():
                                     }
         )
 
-        if insert_device.status_code == 200:
+        if insert_device.status_code == 201:
+            #logging.info(insert_software.text)
+            print("Yay, created device.")
+            return True
+
+        elif insert_device.status_code == 200:
             #logging.error(insert_device.text)
             print('Oh no, device already exists. Ignoring...')
             return True
@@ -62,11 +67,6 @@ class Client():
             #logging.error(insert_device.text)
             print(f'Something went wrong...No one likes exceptions!')
             return False
-
-        elif insert_device.status_code == 201:
-            #logging.info(insert_software.text)
-            print("Yay, created device.")
-            return True
 
         return None
 
@@ -79,7 +79,12 @@ class Client():
                                     }
         )
 
-        if insert_software.status_code == 404:
+        if insert_software.status_code == 200:
+            #logging.info(insert_software.text)
+            print("Yay, inserted software.")
+            return True
+
+        elif insert_software.status_code == 404:
             #logging.error(insert_software.text)
             print('No device found with this UUID.')
             return False
@@ -95,10 +100,6 @@ class Client():
             print('Something went wrong..No one likes exceptions!')
             return False
 
-        elif insert_software.status_code == 200:
-            #logging.info(insert_software.text)
-            print("Yay, inserted software.")
-            return True
 
     def process(self):
         if not self.upsert_device():

@@ -49,35 +49,60 @@ def register():
     username = json_request.get('username')
     print(username)
     unsecure_password = json_request.get('password')
+    email = json_request.get('email')
 
-    if not username or not unsecure_password:
+    if not username or not unsecure_password or not email:
         return {'status': 400}
 
     hashed_password = sha256_crypt.hash(unsecure_password)
 
     try:
-        user = User(username=username, password=hashed_password)
+        user = User(username=username, password=hashed_password, email=email)
 
         db.session.add(user)
         db.session.commit()
 
         return {'status': 200}
-    except:
+    except Exception as e:
+        #logging.error(e)
+        print(e)
         db.session.rollback()
         return {'status': 500}
 
 
+@app.route('/users/emails', methods=['GET'])
+def get_users_emails():
+    json_request = request.json
+
+    user = authentication.validate_token(request.headers.get('Authorization'))
+
+    if not user:
+        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+
+    users = User.query.all()
+
+    emails = []
+    for user in users:
+        emails.append(user.email)
+
+    return {'status': 200, 'emails': emails}
+
+
 @app.route('/assets/ips/public', methods=['GET'])
 def get_public_ips():
-    ips = []
+    user = authentication.validate_token(request.headers.get('Authorization'))
+
+    if not user:
+        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
 
     assets = Asset.query.all()
+
+    ips = []
 
     for asset in assets:
         ips.append(asset.public_ip)
 
     return {'ips': ips}
-
 
 @app.route('/assets', methods=['POST'])
 def create_asset():
@@ -90,7 +115,7 @@ def create_asset():
     asset = Asset.query.filter_by(uuid=uuid).first()
 
     if asset:
-        return Response('{"response": "Device already exists", "status": "False"', status=200, mimetype='application/json')
+        return Response('{"response": "Device already exists", "status": "False"}', status=200, mimetype='application/json')
 
     try:
         asset = Asset(
@@ -151,6 +176,8 @@ def update_asset(uuid):
 def add_scans(ip):
     json_request = request.json
 
+    asset = Asset.query.filter_by(ip=ip).first()
+
     ports = request.json.get('ports')
 
     if not isinstance(ports, list):
@@ -165,6 +192,8 @@ def add_scans(ip):
                 state=port['state']['state'],
                 state_reason=port['state']['reason']
             )
+
+            asset.scans.append(scan)
 
         db.session.add(asset)
         db.session.commit()
