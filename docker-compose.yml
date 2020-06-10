@@ -38,6 +38,18 @@ services:
         depends_on:
             - database
 
+    emailer:
+        build: emailer/
+        image: gatherinfo-emailer:latest
+        container_name: gatherinfo-emailer
+        hostname: gatherinfo-emailer
+        networks:
+            - gatherinfonet
+        env_file:
+            - configs/email.env
+        depends_on:
+            - api
+
     frontend:
         build: frontend/
         image: gatherinfo-frontend:latest
