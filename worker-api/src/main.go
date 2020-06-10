@@ -21,8 +21,12 @@ func dailyScan() (err error) {
     res, err := http.Get("http://gatherinfo-api:8080/assets/ips/public")
 
     if err != nil {
+<<<<<<< Updated upstream
         log.Printf("Could not fetch ip list from API, retrying in 10 seconds")
         time.Sleep(10 * time.Second)
+=======
+        log.Printf("Could not fetch public ips from API")
+>>>>>>> Stashed changes
         go dailyScan()
 
         return
@@ -30,10 +34,14 @@ func dailyScan() (err error) {
 
     body, err := ioutil.ReadAll(res.Body)
     if err != nil {
+<<<<<<< Updated upstream
         log.Printf("Could not read response from API, retrying in 10 seconds")
         time.Sleep(10 * time.Second)
         go dailyScan()
 
+=======
+        log.Printf("Could not read response from API")
+>>>>>>> Stashed changes
         return
     }
 

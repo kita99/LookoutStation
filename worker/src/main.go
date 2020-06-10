@@ -2,10 +2,11 @@ package main
 
 import (
 	"log"
-	"http"
+	"net/http"
 	"time"
 	"fmt"
 	"strings"
+	"bytes"
     "context"
     "encoding/json"
 
@@ -94,4 +95,6 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
 
 		log.Fatalf("could not submit scan result: %v", err)
 	}
+
+    log.Println(resp)
 }
