@@ -38,6 +38,18 @@ services:
         depends_on:
             - database
 
+    frontend:
+        build: frontend/
+        image: gatherinfo-frontend:latest
+        container_name: gatherinfo-frontend
+        hostname: gatherinfo-frontend
+        networks:
+            - gatherinfonet
+        ports:
+            - "80:80"
+        depends_on:
+            - api
+
     worker-api:
         build: worker-api/
         image: gatherinfo-worker-api:latest
