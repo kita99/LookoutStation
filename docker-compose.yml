@@ -47,6 +47,7 @@ services:
             - gatherinfonet
         depends_on:
             - redis
+            - api
 
     worker:
         build: worker/
