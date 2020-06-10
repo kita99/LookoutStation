@@ -53,8 +53,6 @@ class Client():
                                     }
         )
 
-        breakpoint()
-
         if insert_device.status_code == 200:
             #logging.error(insert_device.text)
             print('Oh no, device already exists. Ignoring...')
