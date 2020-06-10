@@ -27,10 +27,9 @@ def validate_token(encoded_jwt):
 
 
 def authenticate(username, password):
-    hashed_password = sha256_crypt.hash(password)
     user = User.query.filter_by(username=username).first()
 
-    if sha256_crypt.verify(password, hashed_password):
+    if sha256_crypt.verify(password, user.password):
         return user
 
     return False
