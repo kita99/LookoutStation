@@ -12,10 +12,8 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          <img src="~assets/logo.svg" class="toolbar-logo vertical-middle">
         </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
 

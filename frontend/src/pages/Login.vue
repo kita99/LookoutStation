@@ -1,6 +1,12 @@
 <template>
   <div class="q-pa-md login-background fullscreen">
         <q-card class="login-card absolute-center">
+          <q-card-section>
+            <img src="~assets/logo-black.svg" class="login-logo">
+          </q-card-section>
+
+          <q-separator />
+
           <q-card-section class="login-card-inner">
             <q-form
               @submit="onSubmit"
