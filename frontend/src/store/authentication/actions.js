@@ -1,4 +1,4 @@
-import Vue from 'Vue'
+import Vue from 'vue'
 import axios from 'axios'
 
 export function login ({ state }, payload) {
@@ -7,14 +7,12 @@ export function login ({ state }, payload) {
     method: 'POST',
     data: {
       username: payload.username,
-      password: payload.password,
+      password: payload.password
     }
   }).then(response => {
-    if (response.data.status == '200') {
-      state.isLoggedIn = true
-      Vue.prototype.$cookies.set('token', response.data.token)
-      axios.defaults.headers.common['Authorization'] = response.data.token
-    }
+    state.isLoggedIn = true
+    Vue.prototype.$cookies.set('token', response.data.token)
+    axios.defaults.headers.common.authorization = response.data.token
   }).catch(error => {
     console.log(error)
   })
@@ -26,7 +24,7 @@ export function register ({ state }, payload) {
     method: 'POST',
     data: {
       username: payload.username,
-      password: payload.password,
+      password: payload.password
     }
   }).then(response => {
     state.isPreRegistered = true

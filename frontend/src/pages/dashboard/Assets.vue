@@ -35,7 +35,7 @@ export default {
   },
 
   methods: {
-    ...mapActions('clients', ['getClients'])
+    ...mapActions('assets', ['getAssets'])
   },
 
   created () {

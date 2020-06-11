@@ -1,8 +1,8 @@
 {
-  "name": "gatherinfo",
+  "name": "lookoutstation",
   "version": "0.0.1",
   "description": "A simple frontend for the gatherinfo project",
-  "productName": "GatherInfo",
+  "productName": "LookoutStation",
   "cordovaId": "org.cordova.quasar.app",
   "capacitorId": "",
   "author": "Adrian Dinis <a44721@alunos.ipb.pt>",
