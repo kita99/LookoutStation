@@ -68,7 +68,7 @@ class Software(db.Model):
         return serialize(self, ['user_id'])
 
     def __repr__(self):
-        return '<Software %r>' % self.title
+        return '<Software %r>' % self.name
 
 
 class Scan(db.Model):
