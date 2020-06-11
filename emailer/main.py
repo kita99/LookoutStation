@@ -1,6 +1,7 @@
 import smtplib
 import settings
-
+import requests
+import json
 
 class Emailer():
     def __init__(self):
@@ -23,17 +24,22 @@ class Emailer():
 
         return requests.get(_endpoint, headers=self.auth).json()['emails']
 
-    def retrieve_public_ips(self):
-        _endpoint = 'http://gatherinfo-api:8080/assets/ips/public'
-
-        return requests.get(_endpoint, headers=self.auth).json()['ips']
-
     def retrieve_devices(self):
-        _endpoint = 'http://gatherinfo-api:8080/assets'
+        _endpoint = 'http://gatherinfo-api:8080/assets/devices'
 
         return requests.get(_endpoint, headers=self.auth).json()['devices']
 
-    def send_email(self, emails):
+    def retrieve_public_ips(self, device):
+        _endpoint = f'http://gatherinfo-api:8080/assets/ips/public/{device}'
+
+        return requests.get(_endpoint, headers=self.auth).json()['ip']
+
+    def retrieve_software(self, device):
+        _endpoint = f'http://gatherinfo-api:8080/assets/devices/{device}'
+
+        return requests.get(_endpoint, headers=self.auth).json()['software']
+
+    def send_email(self, emails, device, ip, software=None):
         with smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT) as smtp:
             smtp.ehlo()
             smtp.starttls()
@@ -41,8 +47,8 @@ class Emailer():
 
             smtp.login(self.SMTP_EMAIL, self.SMTP_PASSWORD)
 
-            subject =  f'Here\'s your daily asset report...'
-            body = ''
+            subject = 'Here\'s your daily asset report...'
+            body = f'Device do crl: {device}\nIp do crl: {ip}\nSoftware do crl: {software}'
 
             msg = f'Subject: {subject}\n\n{body}'
 
@@ -50,3 +56,32 @@ class Emailer():
                 smtp.sendmail(self.SMTP_EMAIL, email, msg)
 
     def process(self):
+        _emails = self.retrieve_emails()
+        _devices = self.retrieve_devices()
+
+        data = []
+
+        for device in _devices:
+            if not device:
+                continue
+
+            ip = self.retrieve_public_ips(device)
+            software = self.retrieve_software(device)
+
+            # data.append({
+            #     'device': device,
+            #     'ip': ip,
+            #     'software': software
+            # })
+
+            if not software:
+                print('Sending email without software!!')
+                self.send_email(_emails, device, ip)
+
+            print("Sending email with software")
+            self.send_email(_emails, device, ip, software)
+            break
+        #print(json.dumps(data, indent=4, sort_keys=True))
+
+email = Emailer()
+email.process()
