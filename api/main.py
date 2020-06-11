@@ -87,6 +87,43 @@ def get_users_emails():
 
     return {'status': 200, 'emails': emails}
 
+@app.route('/assets/devices', methods=['GET'])
+def get_devices():
+    user = authentication.validate_token(request.headers.get('Authorization'))
+
+    if not user:
+        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+
+    assets = Asset.query.all()
+
+    unique_ids = []
+
+    for asset in assets:
+        unique_ids.append(asset.uuid)
+
+    return {'devices': unique_ids}
+
+@app.route('/assets/devices/<device>', methods=['GET'])
+def get_software(device):
+    user = authentication.validate_token(request.headers.get('Authorization'))
+
+    if not user:
+        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+
+    if not device:
+        return Response('{"response": "No device supplied", "status": "False"}', status=400, mimetype='application/json')
+
+    asset = Asset.query.filter_by(uuid=device).first()
+
+    software = []
+
+    for asset in asset.software:
+        software.append({
+            'name': asset.name,
+            'version': asset.version
+        })
+
+    return {'software': software}
 
 @app.route('/assets/ips/public', methods=['GET'])
 def get_public_ips():
@@ -103,6 +140,20 @@ def get_public_ips():
         ips.append(asset.public_ip)
 
     return {'ips': ips}
+
+@app.route('/assets/ips/public/<device>', methods=['GET'])
+def get_device_public_ip(device):
+    user = authentication.validate_token(request.headers.get('Authorization'))
+
+    if not user:
+        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+
+    if not device:
+        return Response('{"response": "No device supplied", "status": "False"}', status=400, mimetype='application/json')
+
+    asset = Asset.query.filter_by(uuid=device).first()
+
+    return {'ip': asset.public_ip}
 
 @app.route('/assets', methods=['POST'])
 def create_asset():
