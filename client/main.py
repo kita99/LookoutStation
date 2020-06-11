@@ -42,7 +42,7 @@ class Client():
 
 
     def upsert_device(self):
-        _endpoint = 'http://gatherinfo-api:8080/assets'
+        _endpoint = 'http://lookoutstation-api:8080/assets'
 
         insert_device = requests.post(_endpoint,
                                     json = {
@@ -71,7 +71,7 @@ class Client():
         return None
 
     def upsert_software(self):
-        _endpoint = f'http://gatherinfo-api:8080/assets/{self.uuid}'
+        _endpoint = f'http://lookoutstation-api:8080/assets/{self.uuid}'
 
         insert_software = requests.put(_endpoint,
                                     json = {

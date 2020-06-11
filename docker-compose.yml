@@ -1,34 +1,34 @@
 version: "3.7"
 
 networks:
-    gatherinfonet:
-        name: gatherinfonet
+    lookoutstationnet:
+        name: lookoutstationnet
         driver: bridge
 
 services:
     database:
         image: postgres:12
-        container_name: gatherinfo-database
+        container_name: lookoutstation-database
         hostname: database
         networks:
-            - gatherinfonet
+            - lookoutstationnet
         env_file:
             - configs/postgres.env
 
     redis:
       image: redis:latest
-      container_name: gatherinfo-redis
+      container_name: lookoutstation-redis
       hostname: redis
       networks:
-        - gatherinfonet
+        - lookoutstationnet
 
     api:
         build: api/
-        image: gatherinfo-api:latest
-        container_name: gatherinfo-api
-        hostname: gatherinfo-api
+        image: lookoutstation-api:latest
+        container_name: lookoutstation-api
+        hostname: lookoutstation-api
         networks:
-            - gatherinfonet
+            - lookoutstationnet
         ports:
             - "8080:8080"
         env_file:
@@ -40,11 +40,11 @@ services:
 
     emailer:
         build: emailer/
-        image: gatherinfo-emailer:latest
-        container_name: gatherinfo-emailer
-        hostname: gatherinfo-emailer
+        image: lookoutstation-emailer:latest
+        container_name: lookoutstation-emailer
+        hostname: lookoutstation-emailer
         networks:
-            - gatherinfonet
+            - lookoutstationnet
         env_file:
             - configs/email.env
         depends_on:
@@ -52,11 +52,11 @@ services:
 
     frontend:
         build: frontend/
-        image: gatherinfo-frontend:latest
-        container_name: gatherinfo-frontend
-        hostname: gatherinfo-frontend
+        image: lookoutstation-frontend:latest
+        container_name: lookoutstation-frontend
+        hostname: lookoutstation-frontend
         networks:
-            - gatherinfonet
+            - lookoutstationnet
         ports:
             - "80:80"
         depends_on:
@@ -64,21 +64,21 @@ services:
 
     worker-api:
         build: worker-api/
-        image: gatherinfo-worker-api:latest
-        container_name: gatherinfo-worker-api
-        hostname: gatherinfo-worker-api
+        image: lookoutstation-worker-api:latest
+        container_name: lookoutstation-worker-api
+        hostname: lookoutstation-worker-api
         networks:
-            - gatherinfonet
+            - lookoutstationnet
         depends_on:
             - redis
             - api
 
     worker:
         build: worker/
-        image: gatherinfo-worker:latest
-        container_name: gatherinfo-worker
-        hostname: gatherinfo-worker
+        image: lookoutstation-worker:latest
+        container_name: lookoutstation-worker
+        hostname: lookoutstation-worker
         networks:
-            - gatherinfonet
+            - lookoutstationnet
         depends_on:
             - redis

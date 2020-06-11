@@ -22,7 +22,7 @@ const (
 
 func main() {
     go status.Health()
-	connection := rmq.OpenConnection("gatherinfo-scan-worker", "tcp", "redis:6379", 1)
+	connection := rmq.OpenConnection("lookoustation-scan-worker", "tcp", "redis:6379", 1)
 	queue := connection.OpenQueue("scans")
 
 	queue.StartConsuming(10, 500*time.Millisecond)
@@ -87,7 +87,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
     delivery.Ack()
 
     jsonResponse, _ := json.Marshal(result.Hosts)
-    resp, err := http.Post("http://gatherinfo-api/scans/" + target, "application/json", bytes.NewBuffer(jsonResponse))
+    resp, err := http.Post("http://lookoustation-api/scans/" + target, "application/json", bytes.NewBuffer(jsonResponse))
 
 	if err != nil {
         delivery.Reject()

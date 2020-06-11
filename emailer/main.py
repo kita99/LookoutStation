@@ -15,27 +15,27 @@ class Emailer():
         self.auth = {'Authorization': self.__login()}
 
     def __login(self):
-        _endpoint = 'http://gatherinfo-api:8080/login'
+        _endpoint = 'http://lookoutstation-api:8080/login'
 
         return requests.post(_endpoint, json={"username": self.USERNAME, "password": self.PASSWORD}).json()['token']
 
     def retrieve_emails(self):
-        _endpoint = 'http://gatherinfo-api:8080/users/emails'
+        _endpoint = 'http://lookoutstation-api:8080/users/emails'
 
         return requests.get(_endpoint, headers=self.auth).json()['emails']
 
     def retrieve_devices(self):
-        _endpoint = 'http://gatherinfo-api:8080/assets/devices'
+        _endpoint = 'http://lookoutstation-api:8080/assets/devices'
 
         return requests.get(_endpoint, headers=self.auth).json()['devices']
 
     def retrieve_public_ips(self, device):
-        _endpoint = f'http://gatherinfo-api:8080/assets/ips/public/{device}'
+        _endpoint = f'http://lookoutstation-api:8080/assets/ips/public/{device}'
 
         return requests.get(_endpoint, headers=self.auth).json()['ip']
 
     def retrieve_software(self, device):
-        _endpoint = f'http://gatherinfo-api:8080/assets/devices/{device}'
+        _endpoint = f'http://lookoutstation-api:8080/assets/devices/{device}'
 
         return requests.get(_endpoint, headers=self.auth).json()['software']
 

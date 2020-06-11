@@ -1,6 +1,6 @@
-# GatherInfo (gatherinfo)
+# LookoutStation (lookoutstation)
 
-A simple frontend for the gatherinfo project
+A simple frontend for the lookoustation project
 
 ## Install the dependencies
 ```bash
