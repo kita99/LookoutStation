@@ -47,9 +47,8 @@ def register():
     json_request = request.json
 
     username = json_request.get('username')
-    print(username)
-    unsecure_password = json_request.get('password')
     email = json_request.get('email')
+    unsecure_password = json_request.get('password')
 
     if not username or not unsecure_password or not email:
         return {'status': 400}
@@ -87,25 +86,39 @@ def get_users_emails():
 
     return {'status': 200, 'emails': emails}
 
-@app.route('/assets/devices', methods=['GET'])
-def get_devices():
+
+@app.route('/assets/', methods=['GET'])
+def get_all_assets():
     user = authentication.validate_token(request.headers.get('Authorization'))
+    assets = []
 
     if not user:
         return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
 
     assets = Asset.query.all()
 
-    unique_ids = []
-
     for asset in assets:
-        unique_ids.append(asset.uuid)
+        devices.append(asset.as_dict())
 
-    return {'devices': unique_ids}
+    return {'assets': assets}
 
-@app.route('/assets/devices/<device>', methods=['GET'])
-def get_software(device):
+
+@app.route('/assets/<uuid>', methods=['GET'])
+def get_single_asset():
     user = authentication.validate_token(request.headers.get('Authorization'))
+
+    if not user:
+        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+
+    asset = Asset.query.filter_by(uuid=uuid).first()
+
+    return {'asset': asset.as_dict()}
+
+
+@app.route('/assets/<uuid>/software', methods=['GET'])
+def get_single_asset_software(uuid):
+    user = authentication.validate_token(request.headers.get('Authorization'))
+    software = []
 
     if not user:
         return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
@@ -113,9 +126,7 @@ def get_software(device):
     if not device:
         return Response('{"response": "No device supplied", "status": "False"}', status=400, mimetype='application/json')
 
-    asset = Asset.query.filter_by(uuid=device).first()
-
-    software = []
+    asset = Asset.query.filter_by(uuid=uuid).first()
 
     for asset in asset.software:
         software.append({
@@ -125,24 +136,25 @@ def get_software(device):
 
     return {'software': software}
 
+
 @app.route('/assets/ips/public', methods=['GET'])
-def get_public_ips():
+def get_all_assets_public_ips():
     user = authentication.validate_token(request.headers.get('Authorization'))
+    ips = []
 
     if not user:
         return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
 
     assets = Asset.query.all()
 
-    ips = []
-
     for asset in assets:
         ips.append(asset.public_ip)
 
     return {'ips': ips}
 
-@app.route('/assets/ips/public/<device>', methods=['GET'])
-def get_device_public_ip(device):
+
+@app.route('/assets/<uuid>/ips/public', methods=['GET'])
+def get_single_public_ip(uuid):
     user = authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
@@ -154,6 +166,7 @@ def get_device_public_ip(device):
     asset = Asset.query.filter_by(uuid=device).first()
 
     return {'ip': asset.public_ip}
+
 
 @app.route('/assets', methods=['POST'])
 def create_asset():
@@ -191,8 +204,6 @@ def update_asset(uuid):
 
     asset = Asset.query.filter_by(uuid=uuid).first()
 
-    print(asset)
-
     if not asset:
         return Response('{"response": "Invalid Device", "status": "False"}', status=404, mimetype='application/json')
 
@@ -204,8 +215,6 @@ def update_asset(uuid):
 
     try:
         for software in software_list:
-
-            print(software)
 
             software_entry = Software(
                 name=software['name'],
@@ -226,10 +235,9 @@ def update_asset(uuid):
 @app.route('/scans/<ip>', methods=['PUT'])
 def add_scans(ip):
     json_request = request.json
+    ports = json_request.get('ports')
 
     asset = Asset.query.filter_by(ip=ip).first()
-
-    ports = request.json.get('ports')
 
     if not isinstance(ports, list):
         return {'status': 400}
