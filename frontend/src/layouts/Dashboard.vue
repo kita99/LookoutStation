@@ -65,10 +65,10 @@ export default {
           route: '/dashboard/overview'
         },
         {
-          title: 'Clients',
-          caption: 'All associated clients',
+          title: 'Assets',
+          caption: 'All associated devices',
           icon: 'desktop_windows',
-          route: '/dashboard/clients'
+          route: '/dashboard/assets'
         }
       ]
     }

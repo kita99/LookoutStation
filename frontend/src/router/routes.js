@@ -4,7 +4,7 @@ const routes = [
     component: () => import('layouts/Dashboard.vue'),
     children: [
       { path: 'overview', component: () => import('pages/dashboard/Overview.vue') },
-      { path: 'clients', component: () => import('pages/dashboard/Clients.vue') }
+      { path: 'assets', component: () => import('pages/dashboard/Assets.vue') }
     ]
   },
   {
