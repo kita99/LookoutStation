@@ -4,12 +4,13 @@
         <q-card class="status-icon-outer shadow-18">
           <q-icon :name="icon" class="status-icon text-black"/>
         </q-card>
+        <p class="text-center text-weight-bolder text-h4">{{ value }}</p>
       </q-card-section>
 
       <q-separator/>
 
       <q-card-section class="status-card-section-bottom text-weight-thin">
-        <p>Last Update: 5 sec ago</p>
+        <p class="text-center text-weight-regular">{{ title }}</p>
       </q-card-section>
     </q-card>
 </template>
@@ -23,6 +24,10 @@ export default {
       required: true
     },
     icon: {
+      type: String,
+      required: true
+    },
+    value: {
       type: String,
       required: true
     }
