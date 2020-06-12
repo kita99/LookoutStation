@@ -1,2 +1,3 @@
 configs/postgres.env
+configs/email.env
 **/__pycache__

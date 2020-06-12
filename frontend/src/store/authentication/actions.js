@@ -3,7 +3,7 @@ import axios from 'axios'
 
 export function login ({ state }, payload) {
   axios({
-    url: state.url + '/login',
+    url: process.env.API + '/login',
     method: 'POST',
     data: {
       username: payload.username,
@@ -20,7 +20,7 @@ export function login ({ state }, payload) {
 
 export function register ({ state }, payload) {
   axios({
-    url: state.url + '/register',
+    url: process.env.API + '/register',
     method: 'POST',
     data: {
       username: payload.username,
