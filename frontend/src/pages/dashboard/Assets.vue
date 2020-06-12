@@ -1,8 +1,8 @@
 <template>
   <div class="q-pa-md">
     <q-table
-      title="Clients"
-      :data="clients"
+      title="Assets"
+      :data="assets"
       :columns="columns"
       row-key="name"
     />
@@ -21,7 +21,7 @@ export default {
           required: true,
           label: 'Hostname',
           align: 'left',
-          field: row => row.hostname,
+          field: row => row.uuid,
           format: val => `${val}`,
           sortable: true
         },
@@ -39,12 +39,16 @@ export default {
   },
 
   created () {
-    this.getClients()
+    this.getAssets()
+  },
+
+  mounted () {
+    this.getAssets()
   },
 
   computed: {
     ...mapState({
-      clients: state => state.clients.clients
+      assets: state => state.assets.assets
     })
   }
 
