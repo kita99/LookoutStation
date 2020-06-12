@@ -1,21 +1,23 @@
 <template>
-  <div class="q-pa-md">
-    <q-table
-      title="Assets"
-      :data="assets"
-      :columns="columns"
-      row-key="name"
-      @row-click="viewAsset"
-    >
-      <template v-slot:no-data>
-        <div class="full-width row flex-center text-accent q-gutter-sm">
-          <q-icon size="2em" name="done_all" />
-          <span>
-            Currently there are no scans running
-          </span>
-        </div>
-      </template>
-    </q-table>
+  <div class="row q-pa-md">
+    <div class="col-10 offset-1">
+      <q-table
+        title="Assets"
+        :data="assets"
+        :columns="columns"
+        row-key="name"
+        @row-click="viewAsset"
+      >
+        <template v-slot:no-data>
+          <div class="full-width row flex-center text-accent q-gutter-sm">
+            <q-icon size="2em" name="sentiment_dissatisfied" />
+            <span>
+              No assets found... time to run some scripts!
+            </span>
+          </div>
+        </template>
+      </q-table>
+    </div>
   </div>
 </template>
 
@@ -35,11 +37,11 @@ export default {
           format: val => `${val}`,
           sortable: true
         },
-        { name: 'private_ip', align: 'center', label: 'Private IP', field: 'private_ip', sortable: true },
+        { name: 'private_ip', label: 'Private IP', field: 'private_ip', sortable: true },
         { name: 'public_ip', label: 'Public IP', field: 'public_ip' },
-        { name: 'operating_system', label: 'Operating System', field: 'operating_system' },
-        { name: 'software', label: 'Software (count)', field: 'software' },
-        { name: 'last_update', label: 'Last Update', field: 'last_update' }
+        { name: 'operating_system', label: 'OS', field: 'operating_system' },
+        { name: 'cves', label: 'CVEs', field: 'cves' },
+        { name: 'open_ports', label: 'Open Ports', field: 'open_ports' }
       ]
     }
   },
