@@ -59,7 +59,7 @@ class Software(db.Model):
     version = db.Column(db.String(80), nullable=False)
 
     asset_id = db.Column(db.Integer, db.ForeignKey('assets.id', ondelete='CASCADE'))
-    asset = db.relationship('Asset', backref=db.backref('software', lazy=True), cascade='all', passive_deletes = True)
+    asset = db.relationship('Asset', backref=db.backref('software', lazy=True), cascade='all')
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
