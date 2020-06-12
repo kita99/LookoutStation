@@ -75,6 +75,7 @@ class Scan(db.Model):
     __tablename__ = 'scans'
 
     id = db.Column(db.Integer, primary_key=True)
+    public_ip = db.Column(postgresql.INET, nullable=True)
     port = db.Column(db.Integer, nullable=False)
     protocol = db.Column(db.String(5), nullable=False)
     service_name = db.Column(db.String(10), nullable=False)

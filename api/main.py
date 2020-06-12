@@ -18,15 +18,6 @@ from app import app
 CORS(app)
 
 
-@app.route('/test', methods=['GET'])
-def test():
-    auth = request.headers.get('Authorization')
-    user = authentication.validate_token(auth)
-
-    print(user.as_dict())
-    return {'status': 200}
-
-
 @app.route('/login', methods=['POST'])
 def login():
     json_request = request.json
@@ -37,9 +28,9 @@ def login():
     user = authentication.authenticate(username, unsecure_password)
 
     if user:
-        return {'status': 200, 'token': authentication.generate_token(user.id)}
+        return {'token': authentication.generate_token(user.id)}
 
-    return {'status': 401}
+    return {'message': 'Authentication failure'}, 401
 
 
 @app.route('/register', methods=['POST'])
@@ -51,7 +42,7 @@ def register():
     unsecure_password = json_request.get('password')
 
     if not username or not unsecure_password or not email:
-        return {'status': 400}
+        return {'message': 'Authentication failure'}, 401
 
     hashed_password = sha256_crypt.hash(unsecure_password)
 
@@ -61,12 +52,12 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        return {'status': 200}
+        return {'message': 'Registration successful'}, 201
     except Exception as e:
         #logging.error(e)
         print(e)
         db.session.rollback()
-        return {'status': 500}
+        return {'message': 'Internal server error'}, 500
 
 
 @app.route('/users/emails', methods=['GET'])
@@ -76,7 +67,7 @@ def get_users_emails():
     user = authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
-        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+        return {'message': 'Authentication failure'}, 401
 
     users = User.query.all()
 
@@ -84,23 +75,23 @@ def get_users_emails():
     for user in users:
         emails.append(user.email)
 
-    return {'status': 200, 'emails': emails}
+    return {'emails': emails}
 
 
-@app.route('/assets/', methods=['GET'])
+@app.route('/assets', methods=['GET'])
 def get_all_assets():
     user = authentication.validate_token(request.headers.get('Authorization'))
-    assets = []
+    asset_list = []
 
     if not user:
-        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+        return {'message': 'Authentication failure'}, 401
 
     assets = Asset.query.all()
 
     for asset in assets:
-        devices.append(asset.as_dict())
+        asset_list.append(asset.as_dict())
 
-    return {'assets': assets}
+    return {'assets': asset_list}
 
 
 @app.route('/assets/<uuid>', methods=['GET'])
@@ -108,7 +99,7 @@ def get_single_asset():
     user = authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
-        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+        return {'message': 'Authentication failure'}, 401
 
     asset = Asset.query.filter_by(uuid=uuid).first()
 
@@ -121,12 +112,12 @@ def get_single_asset_software(uuid):
     software = []
 
     if not user:
-        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
-
-    if not device:
-        return Response('{"response": "No device supplied", "status": "False"}', status=400, mimetype='application/json')
+        return {'message': 'Authentication failure'}, 401
 
     asset = Asset.query.filter_by(uuid=uuid).first()
+
+    if not asset:
+        return {'message': 'Asset with specified UUID does not exist'}, 404
 
     for asset in asset.software:
         software.append({
@@ -143,7 +134,7 @@ def get_all_assets_public_ips():
     ips = []
 
     if not user:
-        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
+        return {'message': 'Authentication failure' }, 401
 
     assets = Asset.query.all()
 
@@ -158,12 +149,12 @@ def get_single_public_ip(uuid):
     user = authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
-        return Response('{"response": "Invalid User", "status": "False"}', status=401, mimetype='application/json')
-
-    if not device:
-        return Response('{"response": "No device supplied", "status": "False"}', status=400, mimetype='application/json')
+        return {'message': 'Authentication failure' }, 401
 
     asset = Asset.query.filter_by(uuid=device).first()
+
+    if not asset:
+        return {'message': 'Asset with specified UUID does not exist'}, 404
 
     return {'ip': asset.public_ip}
 
@@ -179,7 +170,7 @@ def create_asset():
     asset = Asset.query.filter_by(uuid=uuid).first()
 
     if asset:
-        return Response('{"response": "Device already exists", "status": "False"}', status=200, mimetype='application/json')
+        return {'message': 'UUID already exists'}
 
     try:
         asset = Asset(
@@ -191,10 +182,10 @@ def create_asset():
         db.session.add(asset)
         db.session.commit()
 
-        return Response('{"response": "Added new device", "status": "True"}', status=201, mimetype='application/json')
+        return {'message': 'Asset registered successfully'}, 201
     except:
         db.session.rollback()
-        return Response('{"response": "Exception happened", "status": "False"}', status=500, mimetype='application/json')
+        return {'message': 'Internal server error'}, 500
 
 
 @app.route('/assets/<uuid>', methods=['PUT'])
@@ -205,17 +196,16 @@ def update_asset(uuid):
     asset = Asset.query.filter_by(uuid=uuid).first()
 
     if not asset:
-        return Response('{"response": "Invalid Device", "status": "False"}', status=404, mimetype='application/json')
+        return {'message': 'Asset with specified UUID does not exist'}, 404
 
     if not software_list:
-        return Response('{"response": "Invalid data passed", "status": "False"}', status=400, mimetype='application/json')
+        return {'message': 'One or more parameters missing'}, 400
 
     if not isinstance(software_list, list):
-        return Response('{"response": "Invalid data passed", "status": "False"}', status=400, mimetype='application/json')
+        return {'message': 'One or more parameters is malformed'}, 400
 
     try:
         for software in software_list:
-
             software_entry = Software(
                 name=software['name'],
                 version=software['version']
@@ -226,25 +216,24 @@ def update_asset(uuid):
         db.session.add(asset)
         db.session.commit()
 
-        return Response('{"response": "Software inserted", "status": "True"}', status=200, mimetype='application/json')
+        return {'message': 'Asset updated successfully'}, 201
     except Exception as e:
         db.session.rollback()
-        return Response(f'{"response": {e}, "status": "False"}', status=500, mimetype='application/json')
+        return {'message': 'Internal server error'}, 500
 
 
-@app.route('/scans/<ip>', methods=['PUT'])
-def add_scans(ip):
+@app.route('/scans/<public_ip>', methods=['PUT'])
+def add_scans(public_ip):
     json_request = request.json
     ports = json_request.get('ports')
 
-    asset = Asset.query.filter_by(ip=ip).first()
-
     if not isinstance(ports, list):
-        return {'status': 400}
+        return {'message': 'One or more parameters is malformed'}, 400
 
     try:
         for port in ports:
             scan = Scan(
+                public_ip=public_ip,
                 port=port['id'],
                 protocol=port['protocol'],
                 service_name=port['service']['name'],
@@ -252,12 +241,11 @@ def add_scans(ip):
                 state_reason=port['state']['reason']
             )
 
-            asset.scans.append(scan)
+            db.session.add(scan)
 
-        db.session.add(asset)
         db.session.commit()
 
-        return Response('{"response": "Software inserted", "status": "True"}', status=200, mimetype='application/json')
+        return {'message': 'Scan data inserted successfully'}
     except:
         db.session.rollback()
-        return Response('{"response": "Exception happened", "status": "False"}', status=500, mimetype='application/json')
+        return {'message': 'Internal server error'}, 500
