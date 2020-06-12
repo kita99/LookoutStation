@@ -5,7 +5,17 @@
       :data="assets"
       :columns="columns"
       row-key="name"
-    />
+      @row-click="viewAsset"
+    >
+      <template v-slot:no-data>
+        <div class="full-width row flex-center text-accent q-gutter-sm">
+          <q-icon size="2em" name="done_all" />
+          <span>
+            Currently there are no scans running
+          </span>
+        </div>
+      </template>
+    </q-table>
   </div>
 </template>
 
@@ -35,7 +45,11 @@ export default {
   },
 
   methods: {
-    ...mapActions('assets', ['getAssets'])
+    ...mapActions('assets', ['getAssets']),
+
+    viewAsset: function (e, row) {
+      this.$router.push('/dashboard/assets/' + row.uuid)
+    }
   },
 
   mounted () {

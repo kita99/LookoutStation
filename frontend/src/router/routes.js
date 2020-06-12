@@ -12,7 +12,14 @@ const routes = [
       },
       {
         path: 'assets',
-        component: () => import('pages/dashboard/Assets.vue'),
+        component: () => import('pages/dashboard/assets/List.vue'),
+        meta: {
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'assets/*',
+        component: () => import('pages/dashboard/assets/View.vue'),
         meta: {
           requiresAuth: true
         }

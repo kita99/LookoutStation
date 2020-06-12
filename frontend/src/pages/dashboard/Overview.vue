@@ -2,15 +2,15 @@
   <div>
     <div class="row q-mt-md">
       <div class="col-3 offset-1 dashboard-status-grid">
-        <StatusCard title="Assets" icon="computer" value="30" />
+        <StatusCard title="Assets" icon="computer" :value="assetCount" />
       </div>
 
       <div class="col-3 dashboard-status-grid">
-        <StatusCard title="Vulnerabilities" icon="bug_report" value="5" />
+        <StatusCard title="Vulnerabilities" icon="bug_report" :value="vulnerabilityCount" />
       </div>
 
       <div class="col-3 dashboard-status-grid">
-        <StatusCard title="Open Ports" icon="security" value="8" />
+        <StatusCard title="Open Ports" icon="security" :value="openPortCount" />
       </div>
     </div>
 
@@ -47,6 +47,15 @@
                 {{ props.row.eta }}
               </q-td>
             </q-tr>
+          </template>
+
+          <template v-slot:no-data>
+            <div class="full-width row flex-center text-accent q-gutter-sm">
+              <q-icon size="2em" name="done_all" />
+              <span>
+                Currently there are no scans running
+              </span>
+            </div>
           </template>
         </q-table>
       </div>
@@ -94,7 +103,10 @@ export default {
 
   computed: {
     ...mapState({
-      ongoingScans: state => state.scans.ongoingScans
+      ongoingScans: state => state.scans.ongoingScans,
+      assetCount: state => state.statistics.assetCount,
+      vulnerabilityCount: state => state.statistics.vulnerabilityCount,
+      openPortCount: state => state.statistics.openPortCount
     })
   }
 
