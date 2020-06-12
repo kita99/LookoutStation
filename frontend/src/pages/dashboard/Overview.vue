@@ -2,65 +2,49 @@
   <div>
     <div class="row q-mt-md">
       <div class="col-3 offset-1 dashboard-status-grid">
-        <StatusCard title="title1" icon="computer" />
+        <StatusCard title="Assets" icon="computer" value="30" />
       </div>
 
       <div class="col-3 dashboard-status-grid">
-        <StatusCard title="title2" icon="bug_report" />
+        <StatusCard title="Vulnerabilities" icon="bug_report" value="5" />
       </div>
 
       <div class="col-3 dashboard-status-grid">
-        <StatusCard title="title3" icon="security" />
+        <StatusCard title="Open Ports" icon="security" value="8" />
       </div>
     </div>
 
     <div class="row">
       <div class="col-10 offset-1">
         <q-table
-          title="Ongoing Tasks"
-          :data="data"
+          title="Ongoing Scans"
+          :data="ongoingScans"
           :columns="columns"
-          row-key="name"
+          row-key="public_ip"
         >
           <template v-slot:body="props">
             <q-tr :props="props">
-              <q-td key="name" :props="props">
-                {{ props.row.name }}
+              <q-td key="public_ip" :props="props">
+                {{ props.row.public_ip }}
               </q-td>
-              <q-td key="calories" :props="props">
-                <q-badge color="green">
-                  {{ props.row.calories }}
-                </q-badge>
+              <q-td key="flags" :props="props">
+                {{ props.row.flags }}
               </q-td>
-              <q-td key="fat" :props="props">
-                <q-badge color="purple">
-                  {{ props.row.fat }}
-                </q-badge>
+              <q-td key="ports" :props="props">
+                {{ props.row.ports }}
               </q-td>
-              <q-td key="carbs" :props="props">
-                <q-badge color="orange">
-                  {{ props.row.carbs }}
-                </q-badge>
+              <q-td key="progress" :props="props">
+                <q-linear-progress stripe size="25px" :value="parseFloat(props.row.progress)" color="primary">
+                  <div class="absolute-full flex flex-center">
+                    <q-badge color="teal" text-color="white" :label="(props.row.progress * 100).toFixed(1) + '%'" />
+                  </div>
+                </q-linear-progress>
               </q-td>
-              <q-td key="protein" :props="props">
-                <q-badge color="primary">
-                  {{ props.row.protein }}
-                </q-badge>
+              <q-td key="started_at" :props="props">
+                {{ props.row.started_at }}
               </q-td>
-              <q-td key="sodium" :props="props">
-                <q-badge color="teal">
-                  {{ props.row.sodium }}
-                </q-badge>
-              </q-td>
-              <q-td key="calcium" :props="props">
-                <q-badge color="accent">
-                  {{ props.row.calcium }}
-                </q-badge>
-              </q-td>
-              <q-td key="iron" :props="props">
-                <q-badge color="amber">
-                  {{ props.row.iron }}
-                </q-badge>
+              <q-td key="eta" :props="props">
+                {{ props.row.eta }}
               </q-td>
             </q-tr>
           </template>
@@ -71,6 +55,7 @@
 </template>
 
 <script>
+import { mapActions, mapState } from 'vuex'
 import StatusCard from 'components/StatusCard'
 
 export default {
@@ -82,127 +67,37 @@ export default {
     return {
       columns: [
         {
-          name: 'name',
+          name: 'public_ip',
           required: true,
-          label: 'Dessert (100g serving)',
+          label: 'IP Address',
           align: 'left',
-          field: row => row.name,
+          field: row => row.public_ip,
           format: val => `${val}`,
           sortable: true
         },
-        { name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true },
-        { name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true },
-        { name: 'carbs', label: 'Carbs (g)', field: 'carbs' },
-        { name: 'protein', label: 'Protein (g)', field: 'protein' },
-        { name: 'sodium', label: 'Sodium (mg)', field: 'sodium' },
-        { name: 'calcium', label: 'Calcium (%)', field: 'calcium', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) },
-        { name: 'iron', label: 'Iron (%)', field: 'iron', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) }
-      ],
-
-      data: [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-          sodium: 87,
-          calcium: '14%',
-          iron: '1%'
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-          sodium: 129,
-          calcium: '8%',
-          iron: '1%'
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-          sodium: 337,
-          calcium: '6%',
-          iron: '7%'
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-          sodium: 413,
-          calcium: '3%',
-          iron: '8%'
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-          sodium: 327,
-          calcium: '7%',
-          iron: '16%'
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-          sodium: 50,
-          calcium: '0%',
-          iron: '0%'
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-          sodium: 38,
-          calcium: '0%',
-          iron: '2%'
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          sodium: 562,
-          calcium: '0%',
-          iron: '45%'
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          sodium: 326,
-          calcium: '2%',
-          iron: '22%'
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          sodium: 54,
-          calcium: '12%',
-          iron: '6%'
-        }
+        { name: 'flags', label: 'Flags', field: 'flags' },
+        { name: 'ports', label: 'Ports', field: 'ports' },
+        { name: 'progress', align: 'center', label: 'Progress', field: 'progress', sortable: true },
+        { name: 'started_at', label: 'Started At', field: 'started_at' },
+        { name: 'eta', label: 'ETA', field: 'eta' }
       ]
     }
+  },
+
+  methods: {
+    ...mapActions('scans', ['getOngoingScans'])
+  },
+
+  mounted () {
+    this.getOngoingScans()
+  },
+
+  computed: {
+    ...mapState({
+      ongoingScans: state => state.scans.ongoingScans
+    })
   }
+
 }
 </script>
 
