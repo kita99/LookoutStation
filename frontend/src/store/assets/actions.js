@@ -5,8 +5,8 @@ export function getAssets ({ commit, state }, payload) {
     url: process.env.API + '/assets',
     method: 'GET'
   }).then(response => {
-    commit('SET_ASSETS', response.data.assets)
-  }).catch(error => {
-    console.log(error)
+    if (response.data) {
+      commit('SET_ASSETS', response.data.assets)
+    }
   })
 }

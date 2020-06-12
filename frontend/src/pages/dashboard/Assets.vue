@@ -38,10 +38,6 @@ export default {
     ...mapActions('assets', ['getAssets'])
   },
 
-  created () {
-    this.getAssets()
-  },
-
   mounted () {
     this.getAssets()
   },
