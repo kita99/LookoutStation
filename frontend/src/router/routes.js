@@ -3,15 +3,27 @@ const routes = [
     path: '/dashboard',
     component: () => import('layouts/Dashboard.vue'),
     children: [
-      { path: 'overview', component: () => import('pages/dashboard/Overview.vue') },
-      { path: 'assets', component: () => import('pages/dashboard/Assets.vue') }
+      {
+        path: 'overview',
+        component: () => import('pages/dashboard/Overview.vue'),
+        meta: {
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'assets',
+        component: () => import('pages/dashboard/Assets.vue'),
+        meta: {
+          requiresAuth: true
+        }
+      }
     ]
   },
   {
     path: '/login',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Login.vue') }
+      { path: '', name: 'Login', component: () => import('pages/Login.vue') }
     ]
   },
   {

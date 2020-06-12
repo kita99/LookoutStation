@@ -9,13 +9,13 @@
 
           <q-card-section class="login-card-inner">
             <q-form
-              @submit="onSubmit"
-              @reset="onReset"
+              @submit="submit"
+              @keydown.enter.prevent="submit"
               class="q-gutter-md"
             >
               <q-input
                 filled
-                v-model="name"
+                v-model="username"
                 label="Username"
                 lazy-rules
                 :rules="[ val => val && val.length > 0 || 'Please type something']"
@@ -28,7 +28,7 @@
               <q-input
                 filled
                 type="password"
-                v-model="age"
+                v-model="password"
                 label="Password"
                 lazy-rules
                 :rules="[
@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex'
+import { mapActions } from 'vuex'
 
 export default {
   data: () => ({
@@ -62,28 +62,12 @@ export default {
     accept: false
   }),
 
-  watch: {
-    isLoggedIn: {
-      handler: 'redirect'
-    }
-  },
-
   methods: {
     ...mapActions('authentication', ['login']),
 
     submit: function () {
       this.login({ username: this.username, password: this.password })
-    },
-
-    redirect: function () {
-      this.$router.push('dashboard/overview')
     }
-  },
-
-  computed: {
-    ...mapState({
-      isLoggedIn: state => state.authentication.isLoggedIn
-    })
   }
 }
 </script>
