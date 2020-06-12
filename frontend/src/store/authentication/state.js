@@ -1,6 +1,6 @@
 export default function () {
   return {
-    url: 'http:fadsfadsfadfasdf',
+    loading: false,
     isConfirmed: false,
     isPreRegistered: false
   }

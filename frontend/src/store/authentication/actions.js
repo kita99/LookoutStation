@@ -2,7 +2,7 @@ import Vue from 'vue'
 import axios from 'axios'
 import router from '../../router'
 
-export function login ({ state }, payload) {
+export function login ({ commit }, payload) {
   axios({
     url: process.env.API + '/login',
     method: 'POST',
@@ -16,6 +16,7 @@ export function login ({ state }, payload) {
     router.push('/dashboard/overview')
   }).catch(error => {
     console.log(error)
+    commit('SET_LOADING_STATUS', false)
   })
 }
 
