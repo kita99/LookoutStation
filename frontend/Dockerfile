@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm install -g @quasar/cli
 RUN npm install
 COPY . .
-RUN quasar build
+RUN export API=https://api.lookout.network && quasar build
 
 # production stage
 FROM nginx:latest as production-stage

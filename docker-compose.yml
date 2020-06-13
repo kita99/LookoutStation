@@ -65,8 +65,6 @@ services:
         image: lookoutstation-frontend:latest
         container_name: lookoutstation-frontend
         hostname: lookoutstation-frontend
-        environment:
-            - API=https://api.lookout.network/
         networks:
             - lookoutstationnet
             - web
