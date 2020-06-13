@@ -23,14 +23,19 @@ class Client():
 
         return uuid
 
+    def __hostname(self):
+        hostname = self.instance.client.query('select hostname from system_info').response[0]['hostname']
+
+        return hostname
+
     def __fetch_network_info(self):
-        private_ip = self.instance.client.query('select address from interface_addresses where interface = \'eth0\'')
+        private_ip = self.instance.client.query('select address from interface_addresses where interface = \'eth0\'').response[0]['address']
         public_ip = helpers.public_ip()
 
         return (private_ip, public_ip)
 
     def __fetch_kernel_info(self):
-        kernel_version = self.instance.client.query('select version from kernel_info').response
+        kernel_version = self.instance.client.query('select version from kernel_info').response[0]['version']
 
         return kernel_version
 
@@ -47,9 +52,10 @@ class Client():
         insert_device = requests.post(_endpoint,
                                     json = {
                                         'uuid': self.uuid,
-                                        'private_ip': self.private_ip.response[0]['address'],
+                                        'hostname': self.hostname
+                                        'private_ip': self.private_ip,
                                         'public_ip': self.public_ip,
-                                        'kernel_version': self.kernel_version[0]['version']
+                                        'kernel_version': self.kernel_version
                                     }
         )
 
