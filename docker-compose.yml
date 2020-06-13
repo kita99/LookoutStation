@@ -2,8 +2,12 @@ version: "3.7"
 
 networks:
     lookoutstationnet:
+        external: false
         name: lookoutstationnet
         driver: bridge
+    web:
+        external: true
+
 
 services:
     database:
@@ -29,14 +33,20 @@ services:
         hostname: lookoutstation-api
         networks:
             - lookoutstationnet
+            - web
         ports:
-            - "8080:8080"
+            - "8080"
         env_file:
             - configs/postgres.env
         environment:
             - FLASK_APP=main.py
         depends_on:
             - database
+        labels:
+            - traefik.backend=blog
+            - traefik.frontend.rule=Host:api.lookout.network
+            - traefik.docker.network=web
+            - traefik.port=8080
 
     emailer:
         build: emailer/
@@ -57,10 +67,16 @@ services:
         hostname: lookoutstation-frontend
         networks:
             - lookoutstationnet
+            - web
         ports:
-            - "80:80"
+            - "80"
         depends_on:
             - api
+        labels:
+            - traefik.backend=frontend
+            - traefik.frontend.rule=Host:lookout.network
+            - traefik.docker.network=web
+            - traefik.port=80
 
     worker-api:
         build: worker-api/
@@ -82,3 +98,19 @@ services:
             - lookoutstationnet
         depends_on:
             - redis
+
+    traefik:
+        build: traefik/
+        image: lookoutstation-traefik:latest
+        container_name: lookoutstation-traefik
+        hostname: lookoutstation-traefik
+        networks:
+            - web
+        ports:
+            - "80:80"
+            - "443:443"
+        labels:
+            - "traefik.frontend.rule=Host:monitor.lookout.network"
+            - "traefik.port=8080"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
