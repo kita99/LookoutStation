@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 
 import authentication from './authentication'
 import statistics from './statistics'
+import reports from './reports'
 import assets from './assets'
 import scans from './scans'
 
@@ -12,6 +13,7 @@ const store = new Vuex.Store({
   modules: {
     authentication,
     statistics,
+    reports,
     scans,
     assets
   },
