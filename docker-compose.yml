@@ -13,7 +13,7 @@ services:
     database:
         image: postgres:12
         container_name: lookoutstation-database
-        hostname: database
+        hostname: lookoutstation-database
         networks:
             - lookoutstationnet
         env_file:
