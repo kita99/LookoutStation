@@ -103,7 +103,12 @@ def get_single_asset(uuid):
 
     asset = Asset.query.filter_by(uuid=uuid).first()
 
-    return {'asset': asset.as_dict()}
+    if not asset:
+        return {'message': 'Asset with specified UUID does not exist'}, 404
+
+    software = [software.as_dict() for software in asset.software] if asset.software else None
+
+    return {'asset': {'software': software, **asset.as_dict()}}
 
 
 @app.route('/assets/<uuid>/software', methods=['GET'])
@@ -119,13 +124,10 @@ def get_single_asset_software(uuid):
     if not asset:
         return {'message': 'Asset with specified UUID does not exist'}, 404
 
-    for asset in asset.software:
-        software.append({
-            'name': asset.name,
-            'version': asset.version
-        })
+    if not asset.software:
+        return {'message': 'This asset does not have any software associated'}, 404
 
-    return {'software': software}
+    return {'software': [software.as_dict() for software in asset.software]}
 
 
 @app.route('/assets/ips/public', methods=['GET'])
