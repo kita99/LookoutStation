@@ -1,7 +1,8 @@
-import smtplib
 import settings
+import template
 import requests
-import json
+import smtplib
+from email.message import EmailMessage
 
 class Emailer():
     def __init__(self):
@@ -40,20 +41,16 @@ class Emailer():
         return requests.get(_endpoint, headers=self.auth).json()['software']
 
     def send_email(self, emails, device, ip, software=None):
-        with smtplib.SMTP(self.SMTP_SERVER, self.SMTP_PORT) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
+        for email in emails:
+            msg = EmailMessage()
+            msg['Subject'] = 'Here\'s your daily Report'
+            msg['From'] = self.SMTP_EMAIL
+            msg['To'] = email
+            msg.add_alternative(template.html, subtype='html')
 
-            smtp.login(self.SMTP_EMAIL, self.SMTP_PASSWORD)
-
-            subject = 'Here\'s your daily asset report...'
-            body = f'Device do crl: {device}\nIp do crl: {ip}\nSoftware do crl: {software}'
-
-            msg = f'Subject: {subject}\n\n{body}'
-
-            for email in emails:
-                smtp.sendmail(self.SMTP_EMAIL, email, msg)
+            with smtplib.SMTP_SSL(self.SMTP_SERVER, self.SMTP_PORT) as smtp:
+                smtp.login(self.SMTP_EMAIL, self.SMTP_PASSWORD)
+                smtp.send_message(msg)
 
     def process(self):
         _emails = self.retrieve_emails()
@@ -80,8 +77,6 @@ class Emailer():
 
             print("Sending email with software")
             self.send_email(_emails, device, ip, software)
-            break
-        #print(json.dumps(data, indent=4, sort_keys=True))
 
 email = Emailer()
 email.process()
