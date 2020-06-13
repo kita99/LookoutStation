@@ -48,10 +48,8 @@ module.exports = function (ctx) {
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
       vueRouterMode: 'history', // available values: 'hash', 'history'
-      env: ctx.dev ? {
-        API: JSON.stringify('http://172.20.0.2')
-      } : {
-        API: JSON.stringify('http://172.20.0.2')
+      env: {
+        API: JSON.stringify(process.env.API)
       },
 
       // Add dependencies for transpiling with Babel (Array of regexes)
