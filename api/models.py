@@ -41,6 +41,7 @@ class Asset(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(120), nullable=False)
+    hostname = db.Column(db.String(50), nullable=False)
     private_ip = db.Column(postgresql.INET, nullable=True)
     public_ip = db.Column(postgresql.INET, nullable=True)
 
