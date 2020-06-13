@@ -95,7 +95,7 @@ def get_all_assets():
 
 
 @app.route('/assets/<uuid>', methods=['GET'])
-def get_single_asset():
+def get_single_asset(uuid):
     user = authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
