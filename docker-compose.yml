@@ -7,6 +7,9 @@ networks:
     web:
         name: web
 
+volumes:
+    postgres-data:
+
 services:
     database:
         image: postgres:12
@@ -16,6 +19,8 @@ services:
             - lookoutstationnet
         env_file:
             - configs/postgres.env
+        volumes:
+            - "postgres-data:/var/lib/postgresql/data"
 
     redis:
       image: redis:latest
