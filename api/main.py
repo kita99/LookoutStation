@@ -188,9 +188,9 @@ def create_asset():
         db.session.commit()
 
         return {'message': 'Asset registered successfully'}, 201
-    except:
+    except Exception as e:
         db.session.rollback()
-        return {'message': 'Internal server error'}, 500
+        return {'message': 'Internal server error', 'error': e}, 500
 
 
 @app.route('/assets/<uuid>', methods=['PUT'])
