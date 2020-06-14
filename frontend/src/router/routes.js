@@ -1,5 +1,23 @@
 const routes = [
   {
+    path: '/',
+    redirect: '/login'
+  }
+  {
+    path: '/login',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', name: 'Login', component: () => import('pages/Login.vue') }
+    ]
+  },
+  {
+    path: '/register',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/Register.vue') }
+    ]
+  },
+  {
     path: '/dashboard',
     component: () => import('layouts/Dashboard.vue'),
     children: [
@@ -24,20 +42,6 @@ const routes = [
           requiresAuth: true
         }
       }
-    ]
-  },
-  {
-    path: '/login',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      { path: '', name: 'Login', component: () => import('pages/Login.vue') }
-    ]
-  },
-  {
-    path: '/register',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      { path: '', component: () => import('pages/Register.vue') }
     ]
   }
 ]
