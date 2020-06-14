@@ -63,9 +63,9 @@ class Client():
                                         'uuid': self.uuid,
                                         'hostname': self.hostname,
                                         'operating_system': self.operating_system,
+                                        'kernel_version': self.kernel_version,
                                         'private_ip': self.private_ip,
-                                        'public_ip': self.public_ip,
-                                        'kernel_version': self.kernel_version
+                                        'public_ip': self.public_ip
                                     }
         )
 

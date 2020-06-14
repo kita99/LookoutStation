@@ -43,6 +43,7 @@ class Asset(db.Model):
     uuid = db.Column(db.String(120), nullable=False)
     hostname = db.Column(db.String(50), nullable=False)
     operating_system = db.Column(db.String(50), nullable=False)
+    kernel_version = db.Column(db.String(50), nullable=False)
     private_ip = db.Column(postgresql.INET, nullable=True)
     public_ip = db.Column(postgresql.INET, nullable=True)
 
