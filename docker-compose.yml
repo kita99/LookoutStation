@@ -2,12 +2,10 @@ version: "3.7"
 
 networks:
     lookoutstationnet:
-        external: false
         name: lookoutstationnet
         driver: bridge
     web:
-        external: true
-
+        name: web
 
 services:
     database:
@@ -26,28 +24,6 @@ services:
       networks:
         - lookoutstationnet
 
-    api:
-        build: api/
-        image: lookoutstation-api:latest
-        container_name: lookoutstation-api
-        hostname: lookoutstation-api
-        networks:
-            - lookoutstationnet
-            - web
-        ports:
-            - "8080"
-        env_file:
-            - configs/postgres.env
-        environment:
-            - FLASK_APP=main.py
-        depends_on:
-            - database
-        labels:
-            - traefik.backend=blog
-            - traefik.frontend.rule=Host:api.lookout.network
-            - traefik.docker.network=web
-            - traefik.port=8080
-
     emailer:
         build: emailer/
         image: lookoutstation-emailer:latest
@@ -59,24 +35,6 @@ services:
             - configs/email.env
         depends_on:
             - api
-
-    frontend:
-        build: frontend/
-        image: lookoutstation-frontend:latest
-        container_name: lookoutstation-frontend
-        hostname: lookoutstation-frontend
-        networks:
-            - lookoutstationnet
-            - web
-        ports:
-            - "80"
-        depends_on:
-            - api
-        labels:
-            - traefik.backend=frontend
-            - traefik.frontend.rule=Host:lookout.network
-            - traefik.docker.network=web
-            - traefik.port=80
 
     worker-api:
         build: worker-api/
@@ -99,18 +57,76 @@ services:
         depends_on:
             - redis
 
+    api:
+        build: api/
+        image: lookoutstation-api:latest
+        container_name: lookoutstation-api
+        hostname: lookoutstation-api
+        networks:
+            - lookoutstationnet
+            - web
+        env_file:
+            - configs/postgres.env
+        environment:
+            - FLASK_APP=main.py
+        depends_on:
+            - database
+        labels:
+            - "traefik.enable=true"
+            # - "traefik.http.routers.backend.tls=true"
+            - "traefik.http.routers.backend.rule=Host(`api.lookout.network`)"
+            - "traefik.http.routers.backend.entrypoints=web"
+            # - "traefik.http.routers.backend.tls.certresolver=mytlschallenge"
+
+    frontend:
+        build: frontend/
+        image: lookoutstation-frontend:latest
+        container_name: lookoutstation-frontend
+        hostname: lookoutstation-frontend
+        networks:
+            - lookoutstationnet
+            - web
+        depends_on:
+            - api
+        labels:
+            - "traefik.enable=true"
+            # - "traefik.http.routers.frontend.tls=true"
+            - "traefik.http.routers.frontend.rule=Host(`lookout.network`)"
+            - "traefik.http.routers.frontend.entrypoints=web"
+            # - "traefik.http.routers.frontend.tls.certresolver=mytlschallenge"
+
     traefik:
-        build: traefik/
-        image: lookoutstation-traefik:latest
+        image: traefik:2.2
         container_name: lookoutstation-traefik
         hostname: lookoutstation-traefik
+        command:
+            - --api.dashboard=true
+            - --api.debug=true
+            - --providers.docker=true
+            - --providers.docker.exposedbydefault=false
+            # - --providers.file.filename=/traefik/dynamic.yaml
+            - --providers.docker.network=web
+            - --entrypoints.web.address=:80
+            - --entrypoints.web-secured.address=:443
+            # - --entrypoints.web.http.redirections.entryPoint.to=web-secured
+            # - --entrypoints.web.http.redirections.entryPoint.scheme=https
+            # - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
+            # - --certificatesresolvers.mytlschallenge.acme.email=nelsoncabeteff@icloud.com
+            # - --certificatesresolvers.mytlschallenge.acme.storage=/traefik/acme.json
+            # - --certificatesresolvers.mytlschallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory # Enable when in DEV
         networks:
             - web
         ports:
             - "80:80"
+            - "8080:8080"
             - "443:443"
         labels:
-            - "traefik.frontend.rule=Host:monitor.lookout.network"
-            - "traefik.port=8080"
+            - "traefik.enable=true"
+            - "traefik.http.routers.api.rule=Host(`monitor.lookout.network`)"
+            - "traefik.http.routers.api.entrypoints=web"
+            - "traefik.http.routers.api.service=api@internal"
+            - "traefik.http.routers.api.middlewares=auth"
+            - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$w4ZnFp0e$$3/oZEdJhPq2gTW1WFqNT60"
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock"
+            # - "./traefik/:/traefik"
