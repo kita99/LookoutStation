@@ -15,6 +15,7 @@ class Client():
 
         self.uuid = self.__identifier()
         self.hostname = self.__hostname()
+        self.operating_system = self.__fetch_os_info()
         self.private_ip, self.public_ip = self.__fetch_network_info()
         self.kernel_version = self.__fetch_kernel_info()
         self.installed_packages = self.__fetch_installed_packages()
@@ -46,14 +47,21 @@ class Client():
 
         return packages
 
+    def __fetch_os_info(self):
+        os_name = self.instance.client.query('select name from os_version').response[0]['name']
+        os_version = self.instance.client.query('select version from os_version').response[0]['version']
+
+        return str(os_name) + ' ' + str(os_version)
+
 
     def upsert_device(self):
-        _endpoint = 'http://lookoutstation-api:8080/assets'
+        _endpoint = 'http://api.lookout.network/assets'
 
         insert_device = requests.post(_endpoint,
                                     json = {
                                         'uuid': self.uuid,
                                         'hostname': self.hostname,
+                                        'operating_system': self.operating_system,
                                         'private_ip': self.private_ip,
                                         'public_ip': self.public_ip,
                                         'kernel_version': self.kernel_version
@@ -78,7 +86,7 @@ class Client():
         return None
 
     def upsert_software(self):
-        _endpoint = f'http://lookoutstation-api:8080/assets/{self.uuid}'
+        _endpoint = f'http://api.lookout.network/assets/{self.uuid}'
 
         insert_software = requests.put(_endpoint,
                                     json = {

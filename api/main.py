@@ -167,6 +167,7 @@ def create_asset():
 
     uuid = json_request.get('uuid')
     hostname = json_request.get('hostname')
+    operating_system = json_request.get('operating_system')
     private_ip = json_request.get('private_ip')
     public_ip = json_request.get('public_ip')
 
