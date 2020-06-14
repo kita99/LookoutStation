@@ -19,6 +19,7 @@ class Client():
         self.private_ip, self.public_ip = self.__fetch_network_info()
         self.kernel_version = self.__fetch_kernel_info()
         self.installed_packages = self.__fetch_installed_packages()
+        self.API_URL = 'https://api.lookout.network'
 
     def __identifier(self):
         uuid = self.instance.client.query('select uuid from system_info').response[0]['uuid']
@@ -55,7 +56,7 @@ class Client():
 
 
     def upsert_device(self):
-        _endpoint = 'http://api.lookout.network/assets'
+        _endpoint = f'{self.API_URL}/assets'
 
         insert_device = requests.post(_endpoint,
                                     json = {
@@ -86,7 +87,7 @@ class Client():
         return None
 
     def upsert_software(self):
-        _endpoint = f'http://api.lookout.network/assets/{self.uuid}'
+        _endpoint = f'{self.API_URL}/assets/{self.uuid}'
 
         insert_software = requests.put(_endpoint,
                                     json = {
@@ -110,7 +111,6 @@ class Client():
             return False
 
         elif insert_software.status_code == 500:
-            breakpoint()
             #logging.error(insert_software.text)
             print('Something went wrong..No one likes exceptions!')
             return False

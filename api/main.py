@@ -180,6 +180,7 @@ def create_asset():
         asset = Asset(
             uuid=uuid,
             hostname=hostname,
+            operating_system=operating_system,
             private_ip=private_ip,
             public_ip=public_ip
         )
@@ -190,7 +191,7 @@ def create_asset():
         return {'message': 'Asset registered successfully'}, 201
     except Exception as e:
         db.session.rollback()
-        return {'message': 'Internal server error', 'error': e}, 500
+        return {'message': 'Internal server error'}, 500
 
 
 @app.route('/assets/<uuid>', methods=['PUT'])
@@ -223,6 +224,7 @@ def update_asset(uuid):
 
         return {'message': 'Asset updated successfully'}, 201
     except Exception as e:
+        print(e)
         db.session.rollback()
         return {'message': 'Internal server error'}, 500
 
