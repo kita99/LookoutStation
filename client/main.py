@@ -14,6 +14,7 @@ class Client():
             logging.error(e)
 
         self.uuid = self.__identifier()
+        self.hostname = self.__hostname()
         self.private_ip, self.public_ip = self.__fetch_network_info()
         self.kernel_version = self.__fetch_kernel_info()
         self.installed_packages = self.__fetch_installed_packages()
@@ -52,7 +53,7 @@ class Client():
         insert_device = requests.post(_endpoint,
                                     json = {
                                         'uuid': self.uuid,
-                                        'hostname': self.hostname
+                                        'hostname': self.hostname,
                                         'private_ip': self.private_ip,
                                         'public_ip': self.public_ip,
                                         'kernel_version': self.kernel_version
@@ -85,7 +86,7 @@ class Client():
                                     }
         )
 
-        if insert_software.status_code == 200:
+        if insert_software.status_code == 201:
             #logging.info(insert_software.text)
             print("Yay, inserted software.")
             return True
