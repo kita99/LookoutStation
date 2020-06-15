@@ -1,84 +1,15 @@
-from passlib.hash import sha256_crypt
-import json
-
-from flask_cors import CORS
-from flask import Response
+from flask import Blueprint
 from flask import request
-from flask import Flask
-import requests
 
-from models import User
-from models import Scan
-from models import Asset
-from models import Software
-import authentication
-from models import db
-from app import app
-
-CORS(app)
+from lookoutstation.models import Asset
+from lookoutstation.models import Software
+from lookoutstation.models import db
 
 
-@app.route('/login', methods=['POST'])
-def login():
-    json_request = request.json
-
-    username = json_request.get('username')
-    unsecure_password = json_request.get('password')
-
-    user = authentication.authenticate(username, unsecure_password)
-
-    if user:
-        return {'token': authentication.generate_token(user.id)}
-
-    return {'message': 'Authentication failure'}, 401
+assets = Blueprint('assets', __name__)
 
 
-@app.route('/register', methods=['POST'])
-def register():
-    json_request = request.json
-
-    username = json_request.get('username')
-    email = json_request.get('email')
-    unsecure_password = json_request.get('password')
-
-    if not username or not unsecure_password or not email:
-        return {'message': 'Authentication failure'}, 401
-
-    hashed_password = sha256_crypt.hash(unsecure_password)
-
-    try:
-        user = User(username=username, password=hashed_password, email=email)
-
-        db.session.add(user)
-        db.session.commit()
-
-        return {'message': 'Registration successful'}, 201
-    except Exception as e:
-        #logging.error(e)
-        print(e)
-        db.session.rollback()
-        return {'message': 'Internal server error'}, 500
-
-
-@app.route('/users/emails', methods=['GET'])
-def get_users_emails():
-    json_request = request.json
-
-    user = authentication.validate_token(request.headers.get('Authorization'))
-
-    if not user:
-        return {'message': 'Authentication failure'}, 401
-
-    users = User.query.all()
-
-    emails = []
-    for user in users:
-        emails.append(user.email)
-
-    return {'emails': emails}
-
-
-@app.route('/assets', methods=['GET'])
+@assets.route('/', methods=['GET'])
 def get_all_assets():
     user = authentication.validate_token(request.headers.get('Authorization'))
     asset_list = []
@@ -94,7 +25,7 @@ def get_all_assets():
     return {'assets': asset_list}
 
 
-@app.route('/assets/<uuid>', methods=['GET'])
+@assets.route('/<uuid>', methods=['GET'])
 def get_single_asset(uuid):
     user = authentication.validate_token(request.headers.get('Authorization'))
 
@@ -111,7 +42,7 @@ def get_single_asset(uuid):
     return {'asset': {'software': software, **asset.as_dict()}}
 
 
-@app.route('/assets/<uuid>/software', methods=['GET'])
+@assets.route('/<uuid>/software', methods=['GET'])
 def get_single_asset_software(uuid):
     user = authentication.validate_token(request.headers.get('Authorization'))
     software = []
@@ -130,7 +61,7 @@ def get_single_asset_software(uuid):
     return {'software': [software.as_dict() for software in asset.software]}
 
 
-@app.route('/assets/ips/public', methods=['GET'])
+@assets.route('/ips/public', methods=['GET'])
 def get_all_assets_public_ips():
     user = authentication.validate_token(request.headers.get('Authorization'))
     ips = []
@@ -146,14 +77,14 @@ def get_all_assets_public_ips():
     return {'ips': ips}
 
 
-@app.route('/assets/<uuid>/ips/public', methods=['GET'])
+@assets.route('/<uuid>/ips/public', methods=['GET'])
 def get_single_public_ip(uuid):
     user = authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
         return {'message': 'Authentication failure' }, 401
 
-    asset = Asset.query.filter_by(uuid=device).first()
+    asset = Asset.query.filter_by(uuid=uuid).first()
 
     if not asset:
         return {'message': 'Asset with specified UUID does not exist'}, 404
@@ -161,7 +92,7 @@ def get_single_public_ip(uuid):
     return {'ip': asset.public_ip}
 
 
-@app.route('/assets', methods=['POST'])
+@assets.route('/', methods=['POST'])
 def create_asset():
     json_request = request.json
 
@@ -196,7 +127,7 @@ def create_asset():
         return {'message': 'Internal server error'}, 500
 
 
-@app.route('/assets/<uuid>', methods=['PUT'])
+@assets.route('/<uuid>', methods=['PUT'])
 def update_asset(uuid):
     json_request = request.json
     software_list = json_request.get('software')
@@ -227,34 +158,5 @@ def update_asset(uuid):
         return {'message': 'Asset updated successfully'}, 201
     except Exception as e:
         print(e)
-        db.session.rollback()
-        return {'message': 'Internal server error'}, 500
-
-
-@app.route('/scans/<public_ip>', methods=['PUT'])
-def add_scans(public_ip):
-    json_request = request.json
-    ports = json_request.get('ports')
-
-    if not isinstance(ports, list):
-        return {'message': 'One or more parameters is malformed'}, 400
-
-    try:
-        for port in ports:
-            scan = Scan(
-                public_ip=public_ip,
-                port=port['id'],
-                protocol=port['protocol'],
-                service_name=port['service']['name'],
-                state=port['state']['state'],
-                state_reason=port['state']['reason']
-            )
-
-            db.session.add(scan)
-
-        db.session.commit()
-
-        return {'message': 'Scan data inserted successfully'}
-    except:
         db.session.rollback()
         return {'message': 'Internal server error'}, 500

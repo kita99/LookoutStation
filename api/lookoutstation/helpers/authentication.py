@@ -3,8 +3,8 @@ from passlib.hash import sha256_crypt
 
 import jwt
 
-from models import User
-import settings
+from lookoutstation.models import User
+from lookoutstation import settings
 
 
 def generate_token(user_id):
