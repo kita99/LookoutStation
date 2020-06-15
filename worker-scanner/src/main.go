@@ -22,7 +22,7 @@ const (
 
 func main() {
     go status.Health()
-	connection := rmq.OpenConnection("lookoustation-scan-worker", "tcp", "redis:6379", 1)
+	connection := rmq.OpenConnection("lookoustation-worker-scanner", "tcp", "redis:6379", 1)
 	queue := connection.OpenQueue("scans")
 
 	queue.StartConsuming(10, 500*time.Millisecond)

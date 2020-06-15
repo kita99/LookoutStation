@@ -25,7 +25,7 @@ services:
     redis:
       image: redis:latest
       container_name: lookoutstation-redis
-      hostname: redis
+      hostname: lookoutstation-redis
       networks:
         - lookoutstationnet
 

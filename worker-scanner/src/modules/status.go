@@ -8,7 +8,7 @@ import (
 )
 
 func Health() {
-	connection := rmq.OpenConnection("lookoustation-reporter", "tcp", "redis:6379", 2)
+	connection := rmq.OpenConnection("lookoustation-worker-scanner", "tcp", "redis:6379", 2)
 	http.Handle("/status", NewHandler(connection))
     http.ListenAndServe(":8080", nil)
 }

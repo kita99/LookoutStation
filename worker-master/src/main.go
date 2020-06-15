@@ -18,7 +18,7 @@ type Response struct {
 }
 
 func dailyScan() (err error) {
-    res, err := http.Get("http://lookoutstation-api:8080/assets/ips/public")
+    res, err := http.Get("http://lookoutstation-api/assets/ips/public")
 
     if err != nil {
         log.Printf("Could not fetch ip list from API, retrying in 10 seconds")
