@@ -29,6 +29,37 @@ services:
       networks:
         - lookoutstationnet
 
+    worker-master:
+        build: worker-master/
+        image: lookoutstation-worker-master:latest
+        container_name: lookoutstation-worker-master
+        hostname: lookoutstation-worker-master
+        networks:
+            - lookoutstationnet
+        depends_on:
+            - redis
+            - api
+
+    worker-scanner:
+        build: worker-scanner/
+        image: lookoutstation-worker-scanner:latest
+        container_name: lookoutstation-worker-scanner
+        hostname: lookoutstation-worker-scanner
+        networks:
+            - lookoutstationnet
+        depends_on:
+            - redis
+
+    worker-feeder:
+        build: worker-feeder/
+        image: lookoutstation-worker-feeder:latest
+        container_name: lookoutstation-worker-feeder
+        hostname: lookoutstation-worker-feeder
+        networks:
+            - lookoutstationnet
+        depends_on:
+            - redis
+
     emailer:
         build: emailer/
         image: lookoutstation-emailer:latest
@@ -40,27 +71,6 @@ services:
             - configs/email.env
         depends_on:
             - api
-
-    worker-api:
-        build: worker-api/
-        image: lookoutstation-worker-api:latest
-        container_name: lookoutstation-worker-api
-        hostname: lookoutstation-worker-api
-        networks:
-            - lookoutstationnet
-        depends_on:
-            - redis
-            - api
-
-    worker:
-        build: worker/
-        image: lookoutstation-worker:latest
-        container_name: lookoutstation-worker
-        hostname: lookoutstation-worker
-        networks:
-            - lookoutstationnet
-        depends_on:
-            - redis
 
     api:
         build: api/
