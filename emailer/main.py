@@ -4,6 +4,7 @@ import requests
 import smtplib
 from email.message import EmailMessage
 
+
 class Emailer():
     def __init__(self):
         self.SMTP_SERVER = settings.SMTP_SERVER
@@ -26,17 +27,17 @@ class Emailer():
         return requests.get(_endpoint, headers=self.auth).json()['emails']
 
     def retrieve_devices(self):
-        _endpoint = 'http://lookoutstation-api:8080/assets/devices'
+        _endpoint = 'http://lookoutstation-api:8080/assets'
 
-        return requests.get(_endpoint, headers=self.auth).json()['devices']
+        return requests.get(_endpoint, headers=self.auth).json()['assets']
 
     def retrieve_public_ips(self, device):
-        _endpoint = f'http://lookoutstation-api:8080/assets/ips/public/{device}'
+        _endpoint = f'http://lookoutstation-api:8080/assets/{device}/ips/public'
 
-        return requests.get(_endpoint, headers=self.auth).json()['ip']
+        return requests.get(_endpoint, headers=self.auth).json()
 
     def retrieve_software(self, device):
-        _endpoint = f'http://lookoutstation-api:8080/assets/devices/{device}'
+        _endpoint = f'http://lookoutstation-api:8080/assets/{device}/software'
 
         return requests.get(_endpoint, headers=self.auth).json()['software']
 
@@ -46,7 +47,7 @@ class Emailer():
             msg['Subject'] = 'Here\'s your daily Report'
             msg['From'] = self.SMTP_EMAIL
             msg['To'] = email
-            msg.add_alternative(template.html, subtype='html')
+            msg.add_alternative(template.message, subtype='html')
 
             with smtplib.SMTP_SSL(self.SMTP_SERVER, self.SMTP_PORT) as smtp:
                 smtp.login(self.SMTP_EMAIL, self.SMTP_PASSWORD)
@@ -55,15 +56,24 @@ class Emailer():
     def process(self):
         _emails = self.retrieve_emails()
         _devices = self.retrieve_devices()
+        
 
-        data = []
+        #data = []
+        
+        uuids = []
+        for entry in _devices:
+            uuids.append(entry['uuid']) 
 
-        for device in _devices:
+
+        for device in uuids:
             if not device:
                 continue
 
+            breakpoint()
+
             ip = self.retrieve_public_ips(device)
             software = self.retrieve_software(device)
+            
 
             # data.append({
             #     'device': device,
@@ -71,12 +81,14 @@ class Emailer():
             #     'software': software
             # })
 
+
             if not software:
                 print('Sending email without software!!')
                 self.send_email(_emails, device, ip)
 
             print("Sending email with software")
             self.send_email(_emails, device, ip, software)
+
 
 email = Emailer()
 email.process()
