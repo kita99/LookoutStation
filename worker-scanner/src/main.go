@@ -10,8 +10,6 @@ import (
     "context"
     "encoding/json"
 
-    "./modules"
-
 	"github.com/adjust/rmq"
     "github.com/Ullaakut/nmap"
 )
@@ -21,7 +19,6 @@ const (
 )
 
 func main() {
-    go status.Health()
 	connection := rmq.OpenConnection("lookoustation-worker-scanner", "tcp", "redis:6379", 1)
 	queue := connection.OpenQueue("scans")
 
