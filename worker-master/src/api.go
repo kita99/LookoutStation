@@ -5,40 +5,36 @@ import (
     "net/http"
 )
 
-struct Response {
-    Message `json:"message"`
+type Response struct {
+    Message string `json:"message"`
 }
 
 func QueueStatusCheck(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOk)
+    w.WriteHeader(http.StatusOK)
 
     queueStats := CollectQueueStats()
-    jsonQueueStats, _ := json.Marshal(queueStats)
 
-    json.NewEncoder(w).Encode(data)
+    json.NewEncoder(w).Encode(queueStats)
 }
 
 func PublishToQueue(w http.ResponseWriter, r *http.Request) {
-    connection := rmq.OpenConnection("lookoutstation-worker-master", "tcp", "lookoutstation-redis:6379", 1)
     w.Header().Set("Content-Type", "application/json")
 
     var message Message
     var response Response
 
-
-    err = json.NewDecoder(r.Body).Decode(message)
+    err := json.NewDecoder(r.Body).Decode(message)
 
     if err != nil {
         w.WriteHeader(http.StatusBadRequest)
-        response.Message = "Message published"
+        response.Message = "Could not process request"
         json.NewEncoder(w).Encode(response)
     }
 
-    taskQueue := connection.OpenQueue(message.queue)
-    taskQueue.Publish(message.message)
+    Publish(message.queue, message.message)
 
-    w.WriteHeader(http.StatusOk)
+    w.WriteHeader(http.StatusOK)
     response.Message = "Message published"
     json.NewEncoder(w).Encode(response)
 }

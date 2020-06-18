@@ -1,11 +1,10 @@
 package main
 
 import (
-    "encoding/json"
     "github.com/adjust/rmq"
 )
 
-struct Message {
+type Message struct {
     queue string
     message string
 }
@@ -18,7 +17,7 @@ func Publish(queue string, message string) {
 }
 
 func CollectQueueStats() rmq.Stats {
-	connection := rmq.OpenConnection("lookoustation-worker-master", "tcp", "redis:6379", 1)
+	connection := rmq.OpenConnection("lookoustation-worker-master", "tcp", "lookoutstation-redis:6379", 1)
 
 	queues := connection.GetOpenQueues()
     queueStats := connection.CollectStats(queues)

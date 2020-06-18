@@ -16,6 +16,5 @@ func main() {
     r.HandleFunc("/publish", PublishToQueue).
         Methods("POST")
 
-    // Bind to a port and pass our router in
     log.Fatal(http.ListenAndServe(":80", r))
 }
