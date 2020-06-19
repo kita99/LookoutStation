@@ -3,7 +3,7 @@ FROM python:3.8
 COPY . /app
 WORKDIR /app
 
-RUN pip3 install .
+RUN pip3 install -e .
 WORKDIR /app/lookoutstation
 
 EXPOSE 80

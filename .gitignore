@@ -1,4 +1,5 @@
 configs/postgres.env
 configs/email.env
 **/__pycache__
+**/lookoutstation_api.egg-info
 traefik/
