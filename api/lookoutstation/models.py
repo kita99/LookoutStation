@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects import postgresql
 
-from app import app
+from lookoutstation.app import app
 
 db = SQLAlchemy(app)
 db.create_all()
@@ -79,7 +79,28 @@ class Scan(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     public_ip = db.Column(postgresql.INET, nullable=True)
-    port = db.Column(db.Integer, nullable=False)
+    flags = db.Column(db.Integer, nullable=False)
+    progress = db.Column(db.Integer, nullable=False)
+
+    created_on = db.Column(db.DateTime, server_default=db.func.now())
+    updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<Scan %r:%r>' % (self.public_ip, self.created_on)
+
+
+class Port(db.Model):
+    __tablename__ = 'scans'
+
+    id = db.Column(db.Integer, primary_key=True)
+    scan_id = db.Column(db.Integer, db.ForeignKey('scan.id', ondelete='CASCADE'))
+    scan = db.relationship('Scan', backref=db.backref('ports', lazy=True), cascade='all')
+
+    port = db.Column(db.Integer, nullable=True)
+    port_range = db.Column(postgresql.INT4RANGE, nullable=True)
     protocol = db.Column(db.String(5), nullable=False)
     service_name = db.Column(db.String(10), nullable=False)
     state = db.Column(db.String(10), nullable=False)
@@ -87,6 +108,12 @@ class Scan(db.Model):
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<Port %r:%r>' % (self.port, self.port_range)
 
 
 class CVEFeed(db.Model):
@@ -103,6 +130,12 @@ class CVEFeed(db.Model):
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<CVEFeed %r>' % self.name
     
 
 class CVEFeedTask(db.Model):
@@ -110,16 +143,23 @@ class CVEFeedTask(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     cve_feed_id = db.Column(db.Integer, db.ForeignKey('cve_feeds.id', ondelete='CASCADE'))
-    asset = db.relationship('CVEFeed', backref=db.backref('tasks', lazy=True), cascade='all')
+    cve_feed = db.relationship('CVEFeed', backref=db.backref('tasks', lazy=True), cascade='all')
 
     byte_size = db.Column(db.Integer, nullable=False)
     cve_amount = db.Column(db.Integer, nullable=False)
     sha256 = db.Column(db.String(255), nullable=False)
+    raw_json = db.Column(postgresql.JSONB, nullable=False)
 
-    feed_modification_data = db.Column(db.DateTime, nullable=False)
+    feed_modification_date = db.Column(db.DateTime, nullable=False)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<CVEFeedTask %r>' % self.sha256
     
 
     
@@ -128,24 +168,30 @@ class CVE(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     cve_feed_task_id = db.Column(db.Integer, db.ForeignKey('cve_feed_tasks.id', ondelete='CASCADE'))
-    asset = db.relationship('CVEFeedTask', backref=db.backref('cves', lazy=True), cascade='all')
+    cve_feed_task = db.relationship('CVEFeedTask', backref=db.backref('cves', lazy=True), cascade='all')
 
     assigner = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=True)
 
-    cve_modification_data = db.Column(db.DateTime, nullable=False)
-    cve_publication_data = db.Column(db.DateTime, nullable=False)
+    cve_modification_date = db.Column(db.DateTime, nullable=False)
+    cve_publication_date = db.Column(db.DateTime, nullable=False)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<CVEFeedTask %r>' % self.name
     
 
 class CPE(db.Model):
     __tablename__ = 'cpes'
 
     id = db.Column(db.Integer, primary_key=True)
-    cve_id = db.Column(db.Integer, db.ForeignKey('cve.id', ondelete='CASCADE'))
+    cve_id = db.Column(db.Integer, db.ForeignKey('cves.id', ondelete='CASCADE'))
     cve = db.relationship('CVE', backref=db.backref('cves', lazy=True), cascade='all')
 
     part = db.Column(db.String(255), nullable=False)
@@ -158,12 +204,18 @@ class CPE(db.Model):
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<CPE %r:%r>' % (self.vendor, self.product)
+
 
 class CVEImpactMetric(db.Model):
     __tablename__ = 'cve_impact_metrics'
 
     id = db.Column(db.Integer, primary_key=True)
-    cve_id = db.Column(db.Integer, db.ForeignKey('cve.id', ondelete='CASCADE'))
+    cve_id = db.Column(db.Integer, db.ForeignKey('cves.id', ondelete='CASCADE'))
     cve = db.relationship('CVE', backref=db.backref('impact_metrics', lazy=True), cascade='all')
 
     cvss_version = db.Column(db.String(10), nullable=False)
@@ -183,3 +235,9 @@ class CVEImpactMetric(db.Model):
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+
+    def as_dict(self):
+        return serialize(self)
+
+    def __repr__(self):
+        return '<CVEImpactMetric %r>' % self.vector_string
