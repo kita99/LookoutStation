@@ -1,12 +1,11 @@
 package main
 
 import (
-	"log"
-	"time"
-	"fmt"
-	"strings"
+    "math/rand"
     "context"
-    "encoding/json"
+	"time"
+	"log"
+	"fmt"
 
 	"github.com/adjust/rmq"
     "github.com/Ullaakut/nmap"
@@ -16,7 +15,17 @@ const (
 	workers = 10
 )
 
+type ScanResults struct {
+    Hosts []nmap.Host `json:"hosts"`
+    WorkerID string `json:"worker_id"`
+    Progress float64 `json:"progress"`
+    Ports string `json:"ports"`
+}
+
 func main() {
+    // seed to assure workerID randomness
+    rand.Seed(time.Now().UTC().UnixNano())
+
 	connection := rmq.OpenConnection("lookoustation-worker-scanner", "tcp", "lookoutstation-redis:6379", 1)
 	queue := connection.OpenQueue("scans")
 
@@ -24,65 +33,89 @@ func main() {
     queue.SetPushQueue(queue)
 
     for i := 0; i < workers; i++ {
-		workerName := fmt.Sprintf("worker-%d", i)
-		queue.AddConsumer(workerName, NewWorker(i))
+        workerID := GenerateRandomString(12)
+		workerName := fmt.Sprintf("worker-scanner-%s", workerID)
+		queue.AddConsumer(workerName, NewWorker(workerID))
 	}
 
 	select {}
 }
 
 type Worker struct {
+	ID string
 	timestamp time.Time
 }
 
-func NewWorker(tag int) *Worker {
-    log.Printf("Initiating a worker")
+func NewWorker(workerID string) *Worker {
+    log.Printf("Scanner worker %s ready", workerID)
 
 	return &Worker{
+        ID: workerID,
 		timestamp: time.Now(),
 	}
 }
 
 func (worker *Worker) Consume(delivery rmq.Delivery) {
     payload := delivery.Payload()
-    log.Printf("Initiating scan for: %s", payload)
+    log.Printf("Worker %s initiating scan with payload: %s", worker.ID, payload)
 
-    split := strings.Split(payload, ":")
-    target := split[0]
-    portRange := split[1]
+    status := NotifyScanStart(worker.ID, payload)
 
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+    if !status {
+        delivery.Reject()
+        delivery.Push()
+
+        return
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
-	scanner, err := nmap.NewScanner(
-		nmap.WithTargets(target),
-		nmap.WithPorts(portRange),
-		nmap.WithContext(ctx),
-	)
+    steps := StepifyScan(payload)
 
-	if err != nil {
-        delivery.Reject()
-        delivery.Push()
+    for _, step := range steps {
+        scanner, err := nmap.NewScanner(
+            nmap.WithTargets(step.IP),
+            nmap.WithPorts(step.Ports),
+            nmap.WithContext(ctx),
+        )
 
-		log.Fatalf("Unable to create nmap scanner: %v", err)
-	}
+        if err != nil {
+            delivery.Reject()
+            delivery.Push()
 
-	result, _, err := scanner.Run()
-	if err != nil {
-        delivery.Reject()
-        delivery.Push()
+            log.Printf("Unable to create nmap scanner: ", err)
+            return
+        }
 
-		log.Fatalf("Unable to run nmap scan: %v", err)
-	}
+	    result, _, err := scanner.Run()
 
-    scanResults, _ := json.Marshal(result.Hosts)
-    status := StoreScanResults(target, scanResults)
+        if err != nil {
+            delivery.Reject()
+            delivery.Push()
 
-	if !status {
-        delivery.Reject()
-        delivery.Push()
-	}
+            log.Printf("Unable to run nmap scan: ", err)
+            return
+        }
+
+        scanResults := ScanResults{
+            Hosts: result.Hosts,
+            WorkerID: worker.ID,
+            Progress: step.Progress,
+            Ports: step.Ports,
+        }
+
+        status := UpdateScan(step.IP, scanResults)
+
+        if !status {
+            delivery.Reject()
+            delivery.Push()
+
+            return
+        }
+    }
+
 
     delivery.Ack()
-    log.Printf("Finished scan for: %s", payload)
+    log.Printf("Worker %s finished processing %s", worker.ID, payload)
 }
