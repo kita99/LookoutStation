@@ -13,6 +13,18 @@ from lookoutstation.app import db
 scans = Blueprint('scans', __name__)
 
 
+@scans.route('/ongoing', methods=['GET'])
+def get_ongoing_scans():
+
+    try:
+        ongoing_scans = Scan.query.filter(Scan.progress != 100).all()
+
+        return {'ongoing_scans': [scan.as_dict() for scan in ongoing_scans]}
+    except:
+        db.session.rollback()
+        return {'message': 'Internal server error'}, 500
+
+
 @scans.route('/<public_ip>', methods=['POST'])
 def create_scan(public_ip):
     json_request = request.json
