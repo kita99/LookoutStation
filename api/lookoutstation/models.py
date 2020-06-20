@@ -1,10 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects import postgresql
 
-from lookoutstation.app import app
-
-db = SQLAlchemy(app)
-db.create_all()
+from lookoutstation.app import db
 
 
 def serialize(obj, not_allowed_fields=False):
@@ -78,8 +74,9 @@ class Scan(db.Model):
     __tablename__ = 'scans'
 
     id = db.Column(db.Integer, primary_key=True)
-    public_ip = db.Column(postgresql.INET, nullable=True)
-    flags = db.Column(db.Integer, nullable=False)
+    public_ip = db.Column(postgresql.INET, nullable=False)
+    worker_code = db.Column(db.String(12), nullable=False)
+    payload = db.Column(db.String(120), nullable=False)
     progress = db.Column(db.Integer, nullable=False)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
@@ -89,20 +86,20 @@ class Scan(db.Model):
         return serialize(self)
 
     def __repr__(self):
-        return '<Scan %r:%r>' % (self.public_ip, self.created_on)
+        return '<Scan %r:%r>' % (self.public_ip, self.worker_code)
 
 
 class Port(db.Model):
-    __tablename__ = 'scans'
+    __tablename__ = 'ports'
 
     id = db.Column(db.Integer, primary_key=True)
-    scan_id = db.Column(db.Integer, db.ForeignKey('scan.id', ondelete='CASCADE'))
+    scan_id = db.Column(db.Integer, db.ForeignKey('scans.id', ondelete='CASCADE'))
     scan = db.relationship('Scan', backref=db.backref('ports', lazy=True), cascade='all')
 
     port = db.Column(db.Integer, nullable=True)
     port_range = db.Column(postgresql.INT4RANGE, nullable=True)
-    protocol = db.Column(db.String(5), nullable=False)
-    service_name = db.Column(db.String(10), nullable=False)
+    protocol = db.Column(db.String(5), nullable=True)
+    service_name = db.Column(db.String(10), nullable=True)
     state = db.Column(db.String(10), nullable=False)
     reason = db.Column(db.String(10), nullable=False)
 

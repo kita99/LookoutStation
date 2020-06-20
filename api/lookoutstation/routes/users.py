@@ -1,8 +1,9 @@
+from passlib.hash import sha256_crypt
 from flask import Blueprint
 from flask import request
 
 from lookoutstation.models import User
-from lookoutstation.models import db
+from lookoutstation.app import db
 
 
 users = Blueprint('users', __name__)

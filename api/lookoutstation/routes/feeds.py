@@ -5,7 +5,7 @@ from flask import request
 from lookoutstation.helpers import authentication
 from lookoutstation.models import CVEFeed
 from lookoutstation.models import CVEFeedTask
-from lookoutstation.models import db
+from lookoutstation.app import db
 
 
 feeds = Blueprint('feeds', __name__)

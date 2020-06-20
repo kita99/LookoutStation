@@ -3,7 +3,7 @@ from flask import request
 
 from lookoutstation.models import Asset
 from lookoutstation.models import Software
-from lookoutstation.models import db
+from lookoutstation.app import db
 
 
 assets = Blueprint('assets', __name__)
