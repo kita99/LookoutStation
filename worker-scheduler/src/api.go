@@ -26,6 +26,10 @@ type PublicIPsResponse struct {
     IPs []string `json: "ips"`
 }
 
+type FeedTaskResponse struct {
+    FeedTask FeedTask `json: "feed_task"`
+}
+
 type FeedTask struct {
     ByteSize int `json: "byte_size"`
     CVEFeedId int `json: "cve_feed_id"`
@@ -100,7 +104,7 @@ func GetFeeds() ([]Feeds, error) {
 }
 
 func GetLastFeedTask(id string) (FeedTask, error) {
-	var feedTask FeedTask
+	var response FeedTaskResponse
     res, err := http.Get("http://lookoutstation-api/feeds/" + id + "/tasks/latest")
 
     if err != nil {
@@ -109,9 +113,9 @@ func GetLastFeedTask(id string) (FeedTask, error) {
     }
 
     body, _ := ioutil.ReadAll(res.Body)
-	json.Unmarshal(body, &feedTask)
+	json.Unmarshal(body, &response)
 
-    return feedTask, nil
+    return response.FeedTask, nil
 }
 
 func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {

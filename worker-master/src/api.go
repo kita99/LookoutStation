@@ -5,6 +5,11 @@ import (
     "net/http"
 )
 
+type PublishRequest struct {
+    Queue string `json:"queue"`
+    Message string `json:"message"`
+}
+
 type Response struct {
     Message string `json:"message"`
 }
@@ -21,18 +26,19 @@ func QueueStatusCheck(w http.ResponseWriter, r *http.Request) {
 func PublishToQueue(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
-    var message Message
+    var request PublishRequest
     var response Response
 
-    err := json.NewDecoder(r.Body).Decode(message)
+    err := json.NewDecoder(r.Body).Decode(&request)
 
     if err != nil {
         w.WriteHeader(http.StatusBadRequest)
         response.Message = "Could not process request"
         json.NewEncoder(w).Encode(response)
+        return
     }
 
-    Publish(message.queue, message.message)
+    Publish(request.Queue, request.Message)
 
     w.WriteHeader(http.StatusOK)
     response.Message = "Message published"
