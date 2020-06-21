@@ -1,0 +1,38 @@
+def extract_and_prepare(impact, cve_name):
+    impact = cve['impact']
+
+    if 'baseImpactMetricV2' in impact:
+        metric = impact['baseImpactMetricV2']
+
+        secondary_bulk.append(CVEImpactMetric(
+            cve_name=cve['CVE_data_meta']['ID'],
+            cvss_version=metric['cvssV2']['version'],
+            vector_string=metric['cvssV2']['vectorString'],
+            attack_vector=metric['cvssV2']['accessVector'],
+            attack_complexity=metric['cvssV2']['accessComplexity'],
+            confidentiality_impact=metric['cvssV2']['confidentialityComplexity'],
+            integrity_impact=metric['cvssV2']['integrityImpact'],
+            availability_impact=metric['cvssV2']['integrityImpact'],
+            base_score=metric['cvssV2']['baseScore'],
+            exploitability_score=metric['exploitabilityScore'],
+            impact_score=metric['impactScore']
+        ))
+
+    if 'baseImpactMetricV3' in impact:
+        metric = impact['baseImpactMetricV3']
+
+        secondary_bulk.append(CVEImpactMetric(
+            cve_name=cve['CVE_data_meta']['ID'],
+            cvss_version=metric['cvssV3']['version'],
+            vector_string=metric['cvssV3']['vectorString'],
+            attack_vector=metric['cvssV3']['attackVector'],
+            attack_complexity=metric['cvssV3']['attackComplexity'],
+            privileges_required=metric['cvssV3']['privilegesRequired'],
+            confidentiality_impact=metric['cvssV3']['confidentialityComplexity'],
+            integrity_impact=metric['cvssV3']['integrityImpact'],
+            availability_impact=metric['cvssV3']['integrityImpact'],
+            base_score=metric['cvssV3']['baseScore'],
+            base_severity=metric['cvssV3']['baseSeverity'],
+            exploitability_score=metric['exploitabilityScore'],
+            impact_score=metric['impactScore']
+        ))

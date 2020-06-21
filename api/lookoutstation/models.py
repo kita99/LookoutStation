@@ -198,6 +198,10 @@ class CPE(db.Model):
     version = db.Column(db.String(255), nullable=True)
     update = db.Column(db.String(255), nullable=True)
     edition = db.Column(db.String(255), nullable=True)
+    sw_edition = db.Column(db.String(255), nullable=True)
+    target_sw = db.Column(db.String(255), nullable=True)
+    target_hw = db.Column(db.String(255), nullable=True)
+    other = db.Column(db.String(255), nullable=True)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
