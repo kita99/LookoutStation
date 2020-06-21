@@ -158,17 +158,18 @@ class CVEFeedTask(db.Model):
     def __repr__(self):
         return '<CVEFeedTask %r>' % self.sha256
     
-
     
 class CVE(db.Model):
     __tablename__ = 'cves'
 
     id = db.Column(db.Integer, primary_key=True)
-    cve_feed_task_id = db.Column(db.Integer, db.ForeignKey('cve_feed_tasks.id', ondelete='CASCADE'))
-    cve_feed_task = db.relationship('CVEFeedTask', backref=db.backref('cves', lazy=True), cascade='all')
+    created_by_feed_task_id = db.Column(db.Integer, db.ForeignKey('cve_feed_tasks.id', ondelete='CASCADE'))
+    created_by_feed_task = db.relationship('CVEFeedTask', backref=db.backref('cves_created', lazy=True), cascade='all')
+    updated_by_feed_task_id = db.Column(db.Integer, db.ForeignKey('cve_feed_tasks.id', ondelete='CASCADE'))
+    updated_by_feed_task = db.relationship('CVEFeedTask', backref=db.backref('cves_updated', lazy=True), cascade='all')
 
     assigner = db.Column(db.String(255), nullable=False)
-    name = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(50), unique=True, nullable=False)
     description = db.Column(db.String(255), nullable=True)
 
     cve_modification_date = db.Column(db.DateTime, nullable=False)
@@ -181,14 +182,14 @@ class CVE(db.Model):
         return serialize(self)
 
     def __repr__(self):
-        return '<CVEFeedTask %r>' % self.name
+        return '<CVE %r>' % self.name
     
 
 class CPE(db.Model):
     __tablename__ = 'cpes'
 
     id = db.Column(db.Integer, primary_key=True)
-    cve_id = db.Column(db.Integer, db.ForeignKey('cves.id', ondelete='CASCADE'))
+    cve_name = db.Column(db.String(50), db.ForeignKey('cves.name', ondelete='CASCADE'))
     cve = db.relationship('CVE', backref=db.backref('cves', lazy=True), cascade='all')
 
     part = db.Column(db.String(255), nullable=False)
@@ -212,7 +213,7 @@ class CVEImpactMetric(db.Model):
     __tablename__ = 'cve_impact_metrics'
 
     id = db.Column(db.Integer, primary_key=True)
-    cve_id = db.Column(db.Integer, db.ForeignKey('cves.id', ondelete='CASCADE'))
+    cve_name = db.Column(db.Integer, db.ForeignKey('cves.name', ondelete='CASCADE'))
     cve = db.relationship('CVE', backref=db.backref('impact_metrics', lazy=True), cascade='all')
 
     cvss_version = db.Column(db.String(10), nullable=False)
