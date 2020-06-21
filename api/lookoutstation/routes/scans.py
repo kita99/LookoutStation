@@ -4,9 +4,9 @@ from flask import Blueprint
 from flask import request
 
 from lookoutstation.helpers import authentication
-from lookoutstation.helpers import scans
 from lookoutstation.models import Scan
 from lookoutstation.models import Port
+from lookoutstation import helpers
 from lookoutstation.app import db
 
 
@@ -83,7 +83,7 @@ def update_scan(public_ip):
 
 
     if host['ports'] and not host['extra_ports']:
-        compact_ports = scans.compact(host)
+        compact_ports = helpers.scan.compact(host)
 
         for port in compact_ports:
             is_port_range = False

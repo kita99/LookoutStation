@@ -92,7 +92,7 @@ def create_cve(id, task_id):
 
     cves = json_request.get('cves')
 
-    if not isinstance(feeds, list):
+    if not isinstance(cves, list):
         return {'message': 'One or more parameters is malformed'}, 400
 
     try:
@@ -133,9 +133,48 @@ def create_cve(id, task_id):
         return {'message': 'Internal server error'}, 500
 
 
-@feeds.route('/<id>/tasks/<task_id>/cves', methods=['UPDATE'])
+@feeds.route('/<id>/tasks/<task_id>/cves', methods=['PUT'])
 def update_cve(id, task_id):
-    pass
+    json_request = request.json
+
+    cves = json_request.get('cves')
+
+    if not isinstance(cves, list):
+        return {'message': 'One or more parameters is malformed'}, 400
+
+    try:
+        # NOTE: In the future instead of deletes and updates
+        #       maybe inserts with versioning for a timeline?
+
+        for cve in cves:
+            bulk = []
+
+            existing = CVE.query.filter_by(cve_name=cve['CVE_data_meta']['ID'])
+
+            existing.updated_by_feed_task_id = task_id
+            existing.description = cve['description']['description_data'][0]['value']
+            existing.cve_modification_date = cve['lastModifiedDate']
+
+            CVEImpactMetric.query.filter_by(cve_name=cve['CVE_data_meta']['ID']).delete()
+            CPE.query.filter_by(cve_name=cve['CVE_data_meta']['ID']).delete()
+
+            impact_metrics = helpers.extract_and_prepare(cve, cve['CVE_data_meta']['ID'])
+            cpes = helpers.cpe.find_and_parse(cve['configurations']['nodes'], cve['CVE_data_meta']['ID'])
+
+            if impact_metrics:
+                bulk.append(impact_metrics)
+
+            if cpes:
+                bulk.append(cpes)
+
+            db.session.bulk_save_objects(bulk)
+            db.session.commit()
+
+
+        return {'message': 'CVEs updated successfully'}
+    except:
+        db.session.rollback()
+        return {'message': 'Internal server error'}, 500
 
 
 @feeds.route('/<id>/tasks/latest', methods=['GET'])
