@@ -2,9 +2,12 @@ from sqlalchemy import desc
 from flask import Blueprint
 from flask import request
 
-from lookoutstation.helpers import authentication
-from lookoutstation.models import CVEFeed
+from lookoutstation.models import CVEImpactMetric
 from lookoutstation.models import CVEFeedTask
+from lookoutstation.models import CVEFeed
+from lookoutstation.models import CVE
+from lookoutstation.models import CPE
+from lookoutstation import helpers
 from lookoutstation.app import db
 
 
@@ -61,23 +64,77 @@ def create_feed_task(id):
     byte_size = json_request.get('byte_size')
     cve_amount = json_request.get('cve_amount')
     sha256 = json_request.get('sha256')
+    feed_modification_date = json_request.get('feed_modification_date')
+    raw_json = json_request.get('raw_json')
 
     try:
         feed_task = CVEFeedTask(
             cve_feed_id=id,
             byte_size=byte_size,
             cve_amount=cve_amount,
-            sha256=sha256
+            sha256=sha256,
+            feed_modification_date=feed_modification_date,
+            raw_json=raw_json
         )
 
         db.session.add(feed_task)
         db.session.commit()
 
-        return {'message': 'Feed task created successfully'}
+        return {'message': 'Feed task created successfully', 'id': feed_task.id}
     except:
         db.session.rollback()
         return {'message': 'Internal server error'}, 500
 
+
+@feeds.route('/<id>/tasks/<task_id>/cves', methods=['POST'])
+def create_cve(id, task_id):
+    json_request = request.json
+
+    cves = json_request.get('cves')
+
+    if not isinstance(feeds, list):
+        return {'message': 'One or more parameters is malformed'}, 400
+
+    try:
+        primary_bulk = []
+        secondary_bulk = []
+
+        # NOTE: Some assumptions are being made on the data that should
+        #       be fixed in the future (from the worker side)
+
+        for cve in cves:
+            primary_bulk.append(CVE(
+                created_by_feed_task_id=task_id,
+                name=cve['CVE_data_meta']['ID'],
+                assigner=cve['CVE_data_meta']['ASSIGNER'],
+                description=cve['description']['description_data'][0]['value'],
+                cve_modification_date=cve['lastModifiedDate'],
+                cve_publication_date=cve['publishedDate']
+            ))
+
+            impact_metrics = helpers.extract_and_prepare(cve, cve['CVE_data_meta']['ID'])
+            cpes = helpers.cpe.find_and_parse(cve['configurations']['nodes'], cve['CVE_data_meta']['ID'])
+
+            if impact_metrics:
+                secondary_bulk.append(impact_metrics)
+
+            if cpes:
+                secondary_bulk.append(cpes)
+
+        db.session.bulk_save_objects(primary_bulk)
+        db.session.commit()
+
+        db.session.bulk_save_objects(secondary_bulk)
+        db.session.commit()
+
+        return {'message': 'CVE data inserted successfully'}
+    except:
+        db.session.rollback()
+        return {'message': 'Internal server error'}, 500
+
+
+@feeds.route('/<id>/tasks/<task_id>/cves', methods=['UPDATE'])
+def update_cve(id, task_id):
     pass
 
 
