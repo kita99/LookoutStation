@@ -16,7 +16,7 @@ func UpdateScan(address string, results ScanResults) bool  {
     req, err := http.NewRequest(http.MethodPut, "http://lookoutstation-api/scans/" + address, bytes.NewBuffer(scanResults))
 
     if err != nil {
-		log.Printf("Could not submit scan results: %v", err)
+		log.Printf("Could not submit scan results: %s", err)
         return false
     }
 
@@ -24,12 +24,12 @@ func UpdateScan(address string, results ScanResults) bool  {
     resp, err := client.Do(req)
 
     if err != nil {
-		log.Printf("Could not submit scan results: %v", err)
+		log.Printf("Could not submit scan results: %s", err)
         return false
     }
 
     if resp.StatusCode != 200 {
-		log.Printf("Could not submit scan results: %v", err)
+		log.Printf("Could not submit scan results: %s", err)
         return false
     }
 
@@ -50,21 +50,21 @@ func NotifyScanStart(workerID string, payload string) bool {
     notification, err := json.Marshal(request)
 
     if err != nil {
-		log.Printf("Could not create json request: %v", err)
+		log.Printf("Could not create json request: %s", err)
         return false
     }
 
     resp, err := http.Post("http://lookoutstation-api/scans/" + split[0], "application/json", bytes.NewBuffer(notification))
 
     if err != nil {
-		log.Printf("Could not notify scan start: %v", err)
+		log.Printf("Could not notify scan start: %s", err)
         return false
     }
 
     if resp.StatusCode != 200 {
         log.Println(request)
         log.Println(resp.Body)
-        log.Printf("Could not notify scan start, API returned: %v", resp.StatusCode)
+        log.Printf("Could not notify scan start, API returned: %s", resp.StatusCode)
         return false
     }
 

@@ -47,7 +47,7 @@ func PublishToQueue(queue string, message string) bool {
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not publish message to queue")
+        log.Println("Could not publish message to queue: %s", err)
         return false
     }
 
@@ -63,7 +63,7 @@ func GetFeed(id string) (Feed, error) {
     res, err := http.Get("http://lookoutstation-api/feeds/" + id)
 
     if err != nil {
-        log.Printf("Could not fetch feed from API")
+        log.Printf("Could not fetch feed from API: %s", err)
         return feed, err
     }
 
@@ -78,7 +78,7 @@ func GetLastFeedTask(id string) (FeedTask, error) {
     res, err := http.Get("http://lookoutstation-api/feeds/" + id + "/tasks/latest")
 
     if err != nil {
-        log.Printf("Could not fetch latest feed task from API")
+        log.Printf("Could not fetch latest feed task from API: %s", err)
         return feedTask, err
     }
 
@@ -96,7 +96,7 @@ func CreateFeedTask(feedTask FeedTask) (string, bool) {
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not create feed task")
+        log.Println("Could not create feed task: %s": err)
         return "", false
     }
 
@@ -117,7 +117,7 @@ func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
     res, err := http.Get(metaURL)
 
     if err != nil {
-        log.Println("Could not fetch metadata from feed source")
+        log.Println("Could not fetch metadata from feed source: %s", err)
         return feedSourceMetadata, err
     }
 
@@ -151,7 +151,7 @@ func GetFeedSource(sourceURL string) (responses.CVEFeed, error) {
     res, err := http.Get(sourceURL)
 
     if err != nil {
-        log.Println("Could not fetch data from feed source")
+        log.Println("Could not fetch data from feed source: %s", err)
         return feedSourceData, err
     }
 
@@ -174,12 +174,12 @@ func StoreCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not create CVEs")
+        log.Println("Could not create CVEs: %s", err)
         return false
     }
 
     if resp.StatusCode != 200 {
-        log.Println("Could not create CVEs")
+        log.Println("Could not create CVEs: %s", err)
         return false
     }
 
@@ -200,7 +200,7 @@ func UpdateCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
     req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-		log.Printf("Could not update cves: %v", err)
+		log.Printf("Could not update cves: %s", err)
         return false
     }
 
@@ -208,12 +208,12 @@ func UpdateCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
     resp, err := client.Do(req)
 
     if err != nil {
-		log.Printf("Could not update cves: %v", err)
+		log.Printf("Could not update cves: %s", err)
         return false
     }
 
     if resp.StatusCode != 200 {
-		log.Printf("Could not update cves: %v", err)
+		log.Printf("Could not update cves: %s", err)
         return false
     }
 

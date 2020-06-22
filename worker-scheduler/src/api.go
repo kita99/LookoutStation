@@ -10,10 +10,10 @@ import (
 )
 
 type FeedsResponse struct {
-	Feeds []Feeds `json:"feeds"`
+	Feeds []Feed `json:"feeds"`
 }
 
-type Feeds struct {
+type Feed struct {
     ID           string `json:"id"`
     Name         string `json:"name"`
     Description  string `json:"description"`
@@ -52,7 +52,7 @@ func PublishToQueue(queue string, message string) bool {
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not publish message to queue")
+        log.Println("Could not publish message to queue: %s", err)
         return false
     }
 
@@ -68,7 +68,7 @@ func GetPublicIPs() ([]string, error) {
     res, err := http.Get("http://lookoutstation-api/assets/ips/public")
 
     if err != nil {
-        log.Printf("Could not fetch ip list from API")
+        log.Printf("Could not fetch ip list from API: %s", err)
         return response.IPs, err
     }
 
@@ -76,19 +76,19 @@ func GetPublicIPs() ([]string, error) {
     err = json.Unmarshal(body, &response)
 
     if err != nil {
-        log.Println("Could not process API response")
+        log.Println("Could not process API response: %s", err)
         return response.IPs, err
     }
 
     return response.IPs, nil
 }
 
-func GetFeeds() ([]Feeds, error) {
+func GetFeeds() ([]Feed, error) {
     var response FeedsResponse
     res, err := http.Get("http://lookoutstation-api/feeds")
 
     if err != nil {
-        log.Println("Could not fetch feeds from API")
+        log.Println("Could not fetch feeds from API: %s", err)
         return response.Feeds, err
     }
 
@@ -96,7 +96,7 @@ func GetFeeds() ([]Feeds, error) {
     err = json.Unmarshal(body, &response)
 
     if err != nil {
-        log.Println("Could not process API response")
+        log.Printf("Could not process API response: %s", err)
         return response.Feeds, err
     }
 
@@ -108,7 +108,7 @@ func GetLastFeedTask(id string) (FeedTask, error) {
     res, err := http.Get("http://lookoutstation-api/feeds/" + id + "/tasks/latest")
 
     if err != nil {
-        log.Printf("Could not fetch last feed task from API")
+        log.Printf("Could not fetch last feed task from API: %s", err)
         return response.FeedTask, err
     }
 
@@ -125,7 +125,7 @@ func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
     res, err := http.Get(metaURL)
 
     if err != nil {
-        log.Println("Could not fetch metadata from feed source")
+        log.Println("Could not fetch metadata from feed source: %s", err)
         return feedSourceMetadata, err
     }
 
