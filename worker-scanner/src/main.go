@@ -17,7 +17,7 @@ const (
 
 type ScanResults struct {
     Hosts []nmap.Host `json:"hosts"`
-    WorkerID string `json:"worker_id"`
+    WorkerID string `json:"worker_code"`
     Progress float64 `json:"progress"`
     Ports string `json:"ports"`
 }

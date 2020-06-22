@@ -56,7 +56,7 @@ func PublishToQueue(queue string, message string) bool {
         return false
     }
 
-    if resp.Status != "200" {
+    if resp.StatusCode != 200 {
         return false
     }
 
