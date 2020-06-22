@@ -109,7 +109,7 @@ func GetLastFeedTask(id string) (FeedTask, error) {
 
     if err != nil {
         log.Printf("Could not fetch last feed task from API")
-        return feedTask, err
+        return response.FeedTask, err
     }
 
     body, _ := ioutil.ReadAll(res.Body)

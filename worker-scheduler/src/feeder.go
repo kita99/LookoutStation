@@ -27,6 +27,14 @@ func ProcessAllFeeds() {
             return
         }
 
+        if feedTask == (FeedTask{}) {
+            status := PublishToQueue("feeds:populate", feed.ID)
+
+            if !status {
+                return
+            }
+        }
+
         if feedTask.SHA256 != feedMetadata.SHA256 {
             status := PublishToQueue("feeds", feed.ID)
 
