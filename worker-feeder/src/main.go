@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"time"
 	"fmt"
 	"log"
@@ -32,6 +33,11 @@ type Worker struct {
 	timestamp time.Time
 }
 
+type Payload struct {
+    feedID string
+    mode string
+}
+
 func NewWorker(tag int) *Worker {
     log.Println("Initiating a worker")
 
@@ -41,10 +47,24 @@ func NewWorker(tag int) *Worker {
 }
 
 func (worker *Worker) Consume(delivery rmq.Delivery) {
-    feedId := delivery.Payload()
+    rawPayload := delivery.Payload()
+
+    if strings.Contains(rawPayload, ":") {
+        split := strings.Split(rawPayload, ":")
+
+        payload := Payload{
+            feedID: split[0],
+            mode: split[1],
+        }
+    } else {
+        payload := Payload{
+            feedID: split[0],
+            mode: "diff",
+        }
+    }
 
     // Get feed by id
-    feed, err := GetFeed(feedId)
+    feed, err := GetFeed(payload.feedID)
 
     if err != nil {
         delivery.Reject()
@@ -76,20 +96,63 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
         RawJSON: feedSourceData,
     }
 
-    if CreateFeedTask(feedTask) {
+    status, feedTaskID := CreateFeedTask(feedTask)
+
+    if !status {
         delivery.Reject()
         delivery.Push()
     }
 
-    changelog, err := diff.Diff(feedSourceData, feedTask.RawJSON)
+    switch mode := payload.mode; mode {
+    case "diff":
+        lastFeedTask, err := GetLastFeedTask(payload.feedID)
 
-    if err != nil {
-        delivery.Reject()
-        delivery.Push()
-    }
+        if err != nil {
+            delivery.Reject()
+            delivery.Push()
+        }
 
-    // TODO: handle changes and send them over to the API
-    for _, value := range changelog {
-        log.Println(value)
+        changelog, err := diff.Diff(lastFeedTask.RawJSON, feedSourceData)
+
+        if err != nil {
+            delivery.Reject()
+            delivery.Push()
+        }
+
+        var updates []responses.CVE
+        var creates []responses.CVE
+        var matches []string
+
+        for _, change := range changelog {
+            index, _ := strconv.Atoi(change.Path[1])
+
+            if !StringInSlice(CVEIndex, matches) {
+                matches = append(matches, index)
+
+                if change.Type == "create" {
+                    creates = append(creates, feedSourceData.CVEItems[index])
+                }
+
+                if change.Type == "update" {
+                    updates = append(creates, feedSourceData.CVEItems[index])
+                }
+            }
+        }
+
+        if !StoreCVES(payload.feedID, feedTaskID, creates) {
+            delivery.Reject()
+            delivery.Push()
+        }
+
+        if !UpdateCVES(payload.feedID, feedTaskID, updates) {
+            delivery.Reject()
+            delivery.Push()
+        }
+
+    case "populate":
+        if !StoreCVES(payload.feedID, feedTaskID, feedSourceData) {
+            delivery.Reject()
+            delivery.Push()
+        }
     }
 }

@@ -12,11 +12,11 @@ import (
 )
 
 type Feed struct  {
-    Name string `json: "name"`
-    Description string `json: "description"`
-    Organization string `json: "name"`
-    URL string `json: "name"`
-    MetaURL string `json: "name"`
+    Name string `json:"name"`
+    Description string `json:"description"`
+    Organization string `json:"name"`
+    URL string `json:"name"`
+    MetaURL string `json:"name"`
 }
 
 type FeedSourceMetadata struct  {
@@ -26,31 +26,17 @@ type FeedSourceMetadata struct  {
 }
 
 type FeedTask struct {
-    ByteSize string `json: "byte_size"`
-    CVEFeedId string `json: "cve_feed_id"`
-    SHA256 string `json: "sha256"`
-    CVEAmount string `json: "cve_amount"`
-    FeedModificationDate string `json: "feed_modification_date"`
-    RawJSON responses.CVEFeed `json: "raw_json"`
+    ByteSize string `json:"byte_size"`
+    CVEFeedId string `json:"cve_feed_id"`
+    SHA256 string `json:"sha256"`
+    CVEAmount string `json:"cve_amount"`
+    FeedModificationDate string `json:"feed_modification_date"`
+    RawJSON responses.CVEFeed `json:"raw_json"`
 }
 
-type CVE struct {
-    CVEFeedId int `json: "cve_feed_id"`
-    Assigner string `json: "assigner"`
-    Name string `json: "name"`
-    Description string `json: "description"`
-    CVEModificationDate string `json: "feed_modification_date"`
-    CVEPublicationDate string `json: "feed_modification_date"`
-}
-
-type CPE struct {
-    CVEId int `json: "cve_id"`
-    Part int `json: "part"`
-    Vendor string `json: "vendor"`
-    Product int `json: "product"`
-    Version string `json: "version"`
-    Update string `json: "update"`
-    Edition string `json: "edition"`
+type Response struct {
+    ID string `json:"id"`
+    Message string `json:"message"`
 }
 
 func PublishToQueue(queue string, message string) bool {
@@ -102,7 +88,8 @@ func GetLastFeedTask(id string) (FeedTask, error) {
     return feedTask, nil
 }
 
-func CreateFeedTask(feedTask FeedTask) bool {
+func CreateFeedTask(feedTask FeedTask) (bool, string) {
+    var response Response
     url := "http://lookoutstation-api/feeds/" + feedTask.CVEFeedId + "/tasks"
     jsonRequest, _ := json.Marshal(feedTask)
 
@@ -110,14 +97,17 @@ func CreateFeedTask(feedTask FeedTask) bool {
 
     if err != nil {
         log.Println("Could not create feed task")
-        return false
+        return false, nil
     }
 
-    if resp.Status != "200" {
-        return false
+    if resp.StatusCode != 200 {
+        return false, nil
     }
 
-    return true
+    body, _ := ioutil.ReadAll(res.Body)
+	json.Unmarshal(body, &response)
+
+    return true, response.ID
 }
 
 func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
@@ -169,4 +159,63 @@ func GetFeedSource(sourceURL string) (responses.CVEFeed, error) {
 	json.Unmarshal(body, &feedSourceData)
 
     return feedSourceData, nil
+}
+
+func StoreCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
+    url := "http://lookoutstation-api/feeds/" + feedID + "/tasks/" + feedTaskID + "/cves"
+
+    request := struct {
+        CVES []responses.CVE `json:"cves"`
+    }{
+        cves,
+    }
+    jsonRequest, _ := json.Marshal(request)
+
+    resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
+
+    if err != nil {
+        log.Println("Could not create CVEs")
+        return false
+    }
+
+    if resp.StatusCode != 200 {
+        log.Println("Could not create CVEs")
+        return false
+    }
+
+    return true
+}
+
+func UpdateCVES(feedId string, feedTaskID string, cves []responses.CVE) bool {
+    url := "http://lookoutstation-api/feeds/" + feedID + "/tasks/" + feedTaskID + "/cves"
+
+    request := struct {
+        CVES []responses.CVE `json:"cves"`
+    }{
+        cves,
+    }
+    jsonRequest, _ := json.Marshal(request)
+
+    client := &http.Client{}
+    req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonRequest))
+
+    if err != nil {
+		log.Printf("Could not update cves: %v", err)
+        return false
+    }
+
+    req.Header.Set("Content-Type", "application/json; charset=utf-8")
+    resp, err := client.Do(req)
+
+    if err != nil {
+		log.Printf("Could not update cves: %v", err)
+        return false
+    }
+
+    if resp.StatusCode != 200 {
+		log.Printf("Could not update cves: %v", err)
+        return false
+    }
+
+    return true
 }
