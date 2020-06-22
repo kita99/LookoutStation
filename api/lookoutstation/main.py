@@ -1,6 +1,6 @@
 from flask_cors import CORS
 
-from routes.assets import statistics
+from routes.statistics import statistics
 from routes.assets import assets
 from routes.scans import scans
 from routes.users import users

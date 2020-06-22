@@ -88,7 +88,7 @@ func GetLastFeedTask(id string) (FeedTask, error) {
     return feedTask, nil
 }
 
-func CreateFeedTask(feedTask FeedTask) (bool, string) {
+func CreateFeedTask(feedTask FeedTask) (string, bool) {
     var response Response
     url := "http://lookoutstation-api/feeds/" + feedTask.CVEFeedId + "/tasks"
     jsonRequest, _ := json.Marshal(feedTask)
@@ -97,17 +97,17 @@ func CreateFeedTask(feedTask FeedTask) (bool, string) {
 
     if err != nil {
         log.Println("Could not create feed task")
-        return false, nil
+        return "", false
     }
 
     if resp.StatusCode != 200 {
-        return false, nil
+        return "", false
     }
 
-    body, _ := ioutil.ReadAll(res.Body)
+    body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-    return true, response.ID
+    return response.ID, true
 }
 
 func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
@@ -186,7 +186,7 @@ func StoreCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
     return true
 }
 
-func UpdateCVES(feedId string, feedTaskID string, cves []responses.CVE) bool {
+func UpdateCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
     url := "http://lookoutstation-api/feeds/" + feedID + "/tasks/" + feedTaskID + "/cves"
 
     request := struct {

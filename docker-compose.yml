@@ -40,6 +40,17 @@ services:
             - redis
             - api
 
+    worker-scheduler:
+        build: worker-scheduler/
+        image: lookoutstation-worker-scheduler:latest
+        container_name: lookoutstation-worker-scheduler
+        hostname: lookoutstation-worker-scheduler
+        networks:
+            - lookoutstationnet
+        depends_on:
+            - redis
+            - api
+
     worker-scanner:
         build: worker-scanner/
         image: lookoutstation-worker-scanner:latest

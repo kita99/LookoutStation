@@ -2,12 +2,15 @@ package main
 
 import (
 	"strconv"
+	"strings"
 	"time"
 	"fmt"
 	"log"
 
 	"github.com/adjust/rmq"
     "github.com/r3labs/diff"
+
+    "./responses"
 )
 
 const (
@@ -47,17 +50,17 @@ func NewWorker(tag int) *Worker {
 }
 
 func (worker *Worker) Consume(delivery rmq.Delivery) {
+    var payload Payload
     rawPayload := delivery.Payload()
+    split := strings.Split(rawPayload, ":")
 
     if strings.Contains(rawPayload, ":") {
-        split := strings.Split(rawPayload, ":")
-
-        payload := Payload{
+        payload = Payload{
             feedID: split[0],
             mode: split[1],
         }
     } else {
-        payload := Payload{
+        payload = Payload{
             feedID: split[0],
             mode: "diff",
         }
@@ -96,7 +99,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
         RawJSON: feedSourceData,
     }
 
-    status, feedTaskID := CreateFeedTask(feedTask)
+    feedTaskID, status := CreateFeedTask(feedTask)
 
     if !status {
         delivery.Reject()
@@ -121,12 +124,12 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
 
         var updates []responses.CVE
         var creates []responses.CVE
-        var matches []string
+        var matches []int
 
         for _, change := range changelog {
             index, _ := strconv.Atoi(change.Path[1])
 
-            if !StringInSlice(CVEIndex, matches) {
+            if !StringInSlice(index, matches) {
                 matches = append(matches, index)
 
                 if change.Type == "create" {
@@ -150,7 +153,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
         }
 
     case "populate":
-        if !StoreCVES(payload.feedID, feedTaskID, feedSourceData) {
+        if !StoreCVES(payload.feedID, feedTaskID, feedSourceData.CVEItems) {
             delivery.Reject()
             delivery.Push()
         }
