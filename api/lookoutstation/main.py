@@ -1,12 +1,12 @@
 from flask_cors import CORS
 
-from routes.statistics import statistics
-from routes.assets import assets
-from routes.scans import scans
-from routes.users import users
-from routes.feeds import feeds
-from cli import commands
-from app import app
+from lookoutstation.routes.statistics import statistics
+from lookoutstation.routes.assets import assets
+from lookoutstation.routes.scans import scans
+from lookoutstation.routes.users import users
+from lookoutstation.routes.feeds import feeds
+from lookoutstation.cli import commands
+from lookoutstation.app import app
 
 CORS(app)
 

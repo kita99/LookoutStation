@@ -95,6 +95,7 @@ services:
             - configs/postgres.env
         environment:
             - FLASK_APP=main.py
+            - MODULE_NAME=lookoutstation.main
         depends_on:
             - database
         labels:
