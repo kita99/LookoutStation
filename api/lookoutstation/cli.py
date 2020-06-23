@@ -1,7 +1,9 @@
+from passlib.hash import sha256_crypt
 from flask import Blueprint
 import click
 import requests
 
+import getpass
 import json
 
 from lookoutstation.models import CVEImpactMetric
@@ -27,24 +29,78 @@ def dot_print(left, right):
     click.echo(f'{left}{dots}{right}')
 
 
-@commands.cli.command('tasks')
+@commands.cli.command('create-user', help='Create an administrator account')
+def create_user():
+    username = input('Username (admin): ')
+
+    if not username:
+        username = 'admin'
+
+    email = input('Email (admin@admin.com):')
+
+    if not email:
+        email = 'admin@admin.com'
+
+    while True:
+        password = getpass.getpass('Password (min. 8 chars): ')
+
+        if len(password) > 7:
+            break
+
+        click.echo('Please insert a valid password')
+
+    try:
+        user = User(username=username, password=sha256_crypt.hash(password), email=email)
+
+        db.session.add(user)
+        db.session.commit()
+
+        click.echo(f'User "{username}" created successfully!')
+    except Exception as e:
+        click.echo(e)
+        click.echo(f'Could not create user "{username}"')
+
+
+@commands.cli.command('tasks', help='Basic task utilities for workers')
 @click.argument('command')
-def tasks(command):
-    if command == 'scheduler':
-        res = requests.get('http://lookoutstation-worker-scheduler/trigger')
+@click.argument('subcommand', required=False)
+@click.argument('payload', required=False)
+def tasks(command, subcommand):
+    if command == 'publish':
+        if subcommand and payload:
+            res = requests.post(
+                url='http://lookoutstation-worker-master/publish',
+                json={
+                    'queue': subcommand,
+                    'message': payload
+                }
+            )
 
-        if res.status_code != 200:
-            click.echo('Could not trigger scheduler. Code: {res.status_code}')
+            if res.status_code != 200:
+                click.echo(f'Could not publish {payload} to queue {subcommand}. Code: {res.status_code}')
 
-        click.echo('Scheduler triggered successfully!')
+            click.echo('Message published to redis successfully!')
 
-        return
+            return
 
-    if command == 'list':
+
+    if command == 'trigger':
+        if subcommand == 'scheduler':
+            res = requests.get('http://lookoutstation-worker-scheduler/trigger')
+
+            if res.status_code != 200:
+                click.echo(f'Could not trigger scheduler. Code: {res.status_code}')
+
+            click.echo('Scheduler triggered successfully!')
+
+            return
+
+
+    if command == 'queues':
         res = requests.get('http://lookoutstation-worker-master/queues')
 
         if res.status_code != 200:
-            click.echo('Could not trigger scheduler. Code: {res.status_code}')
+            click.echo(f'Could not trigger scheduler. Code: {res.status_code}')
 
             return
 
@@ -53,10 +109,28 @@ def tasks(command):
         return
 
 
-    click.echo(f'Task command {command} not recognized')
+    if command == 'clear':
+        res = requests.get('http://lookoutstation-worker-master/cleanup')
+
+        if res.status_code != 200:
+            click.echo(f'Could not trigger scheduler. Code: {res.status_code}')
+
+            return
+
+        click.echo(json.dumps(res.json(), indent=4))
+
+        return
 
 
-@commands.cli.command('seed')
+    if not subcommand:
+        click.echo(f'Task command "{command}" not recognized')
+        return
+
+
+    click.echo(f'Task command "{command} {subcommand}" not recognized')
+
+
+@commands.cli.command('seed', help='Jumpstart the app with crucial data')
 @click.argument('entity')
 def seeds(entity):
     if entity == 'feeds':
@@ -88,7 +162,8 @@ def seeds(entity):
 
     click.echo(f'{entity} is not recognized as a seedable entity')
 
-@commands.cli.command('db')
+
+@commands.cli.command('db', help='Visualize or recreate the database')
 @click.argument('action')
 def database_actions(action):
     if action == 'recreate':
