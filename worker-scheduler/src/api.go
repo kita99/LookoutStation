@@ -14,7 +14,7 @@ type FeedsResponse struct {
 }
 
 type Feed struct {
-    ID           string `json:"id"`
+    ID           int `json:"id"`
     Name         string `json:"name"`
     Description  string `json:"description"`
     Organization string `json:"organization"`
@@ -23,19 +23,19 @@ type Feed struct {
 }
 
 type PublicIPsResponse struct {
-    IPs []string `json: "ips"`
+    IPs []string `json:"ips"`
 }
 
 type FeedTaskResponse struct {
-    FeedTask FeedTask `json: "feed_task"`
+    FeedTask FeedTask `json:"feed_task"`
 }
 
 type FeedTask struct {
-    ByteSize int `json: "byte_size"`
-    CVEFeedId int `json: "cve_feed_id"`
-    SHA256 string `json: "sha256"`
-    CVEAmount int `json: "cve_amount"`
-    FeedModificationDate string `json: "feed_modification_date"`
+    ByteSize int `json:"byte_size"`
+    CVEFeedId int `json:"cve_feed_id"`
+    SHA256 string `json:"sha256"`
+    CVEAmount int `json:"cve_amount"`
+    FeedModificationDate string `json:"feed_modification_date"`
 }
 
 type FeedSourceMetadata struct {
@@ -109,6 +109,11 @@ func GetLastFeedTask(id string) (FeedTask, error) {
 
     if err != nil {
         log.Printf("Could not fetch last feed task from API: %s", err)
+        return response.FeedTask, err
+    }
+
+    if res.StatusCode != 200 {
+        log.Println("Could not fetch last feed task from API")
         return response.FeedTask, err
     }
 

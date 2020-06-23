@@ -1,10 +1,13 @@
 package main
 
 import (
+    "compress/gzip"
     "encoding/json"
     "io/ioutil"
     "net/http"
     "strings"
+    "strconv"
+    "fmt"
     "bytes"
     "log"
 
@@ -14,9 +17,9 @@ import (
 type Feed struct  {
     Name string `json:"name"`
     Description string `json:"description"`
-    Organization string `json:"name"`
-    URL string `json:"name"`
-    MetaURL string `json:"name"`
+    Organization string `json:"organization"`
+    URL string `json:"url"`
+    MetaURL string `json:"meta_url"`
 }
 
 type FeedSourceMetadata struct  {
@@ -35,7 +38,7 @@ type FeedTask struct {
 }
 
 type Response struct {
-    ID string `json:"id"`
+    ID int `json:"id"`
     Message string `json:"message"`
 }
 
@@ -47,7 +50,7 @@ func PublishToQueue(queue string, message string) bool {
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not publish message to queue: %s", err)
+        log.Printf("Could not publish message to queue: %s", err)
         return false
     }
 
@@ -67,36 +70,55 @@ func GetFeed(id string) (Feed, error) {
         return feed, err
     }
 
+    if res.StatusCode != 200 {
+        err := fmt.Errorf("Could not fetch feed from API (code %d)", res.StatusCode)
+        log.Println(err)
+        return feed, err
+    }
+
     body, _ := ioutil.ReadAll(res.Body)
-	json.Unmarshal(body, &feed)
+    err = json.Unmarshal(body, &feed)
+
+    if err != nil {
+        log.Printf("Could not fetch feed from API: %s", err)
+        return feed, err
+    }
 
     return feed, nil
 }
 
 func GetLastFeedTask(id string) (FeedTask, error) {
-	var feedTask FeedTask
+    var response struct {
+        FeedTask FeedTask `json:"feed_task"`
+    }
+
     res, err := http.Get("http://lookoutstation-api/feeds/" + id + "/tasks/latest")
 
     if err != nil {
         log.Printf("Could not fetch latest feed task from API: %s", err)
-        return feedTask, err
+        return response.FeedTask, err
+    }
+
+    if res.StatusCode != 200 {
+        log.Println("Could not fetch last feed task from API")
+        return response.FeedTask, nil
     }
 
     body, _ := ioutil.ReadAll(res.Body)
-	json.Unmarshal(body, &feedTask)
+	json.Unmarshal(body, &response.FeedTask)
 
-    return feedTask, nil
+    return response.FeedTask, nil
 }
 
-func CreateFeedTask(feedTask FeedTask) (string, bool) {
+func CreateFeedTask(feedID string, feedTask FeedTask) (string, bool) {
     var response Response
-    url := "http://lookoutstation-api/feeds/" + feedTask.CVEFeedId + "/tasks"
+    url := "http://lookoutstation-api/feeds/" + feedID + "/tasks"
     jsonRequest, _ := json.Marshal(feedTask)
 
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not create feed task: %s": err)
+        log.Printf("Could not create feed task: %s", err)
         return "", false
     }
 
@@ -107,7 +129,9 @@ func CreateFeedTask(feedTask FeedTask) (string, bool) {
     body, _ := ioutil.ReadAll(resp.Body)
 	json.Unmarshal(body, &response)
 
-    return response.ID, true
+    feedTaskID := strconv.Itoa(response.ID)
+
+    return feedTaskID, true
 }
 
 func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
@@ -117,7 +141,7 @@ func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
     res, err := http.Get(metaURL)
 
     if err != nil {
-        log.Println("Could not fetch metadata from feed source: %s", err)
+        log.Printf("Could not fetch metadata from feed source: %s", err)
         return feedSourceMetadata, err
     }
 
@@ -130,7 +154,7 @@ func GetFeedSourceMetadata(metaURL string) (FeedSourceMetadata, error) {
         split = strings.Split(line, ":")
 
         if split[0] == "lastModifiedDate" {
-            feedSourceMetadata.LastModifiedDate = split[1]
+            feedSourceMetadata.LastModifiedDate = strings.Join(split[1:], ":")
         }
 
         if split[0] == "size" {
@@ -151,21 +175,21 @@ func GetFeedSource(sourceURL string) (responses.CVEFeed, error) {
     res, err := http.Get(sourceURL)
 
     if err != nil {
-        log.Println("Could not fetch data from feed source: %s", err)
+        log.Printf("Could not fetch data from feed source: %s", err)
         return feedSourceData, err
     }
 
-    body, _ := ioutil.ReadAll(res.Body)
-	json.Unmarshal(body, &feedSourceData)
+    reader, err := gzip.NewReader(res.Body)
+    err = json.NewDecoder(reader).Decode(&feedSourceData)
 
     return feedSourceData, nil
 }
 
-func StoreCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
+func StoreCVES(feedID string, feedTaskID string, cves []responses.CVEItem) bool {
     url := "http://lookoutstation-api/feeds/" + feedID + "/tasks/" + feedTaskID + "/cves"
 
     request := struct {
-        CVES []responses.CVE `json:"cves"`
+        CVES []responses.CVEItem `json:"cves"`
     }{
         cves,
     }
@@ -174,23 +198,23 @@ func StoreCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
     resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
 
     if err != nil {
-        log.Println("Could not create CVEs: %s", err)
+        log.Printf("Could not create CVEs: %s", err)
         return false
     }
 
     if resp.StatusCode != 200 {
-        log.Println("Could not create CVEs: %s", err)
+        log.Printf("Could not create CVEs: %s", err)
         return false
     }
 
     return true
 }
 
-func UpdateCVES(feedID string, feedTaskID string, cves []responses.CVE) bool {
+func UpdateCVES(feedID string, feedTaskID string, cves []responses.CVEItem) bool {
     url := "http://lookoutstation-api/feeds/" + feedID + "/tasks/" + feedTaskID + "/cves"
 
     request := struct {
-        CVES []responses.CVE `json:"cves"`
+        CVES []responses.CVEItem `json:"cves"`
     }{
         cves,
     }

@@ -6,39 +6,41 @@ type CVEFeed struct {
 	CVEDataVersion      string `json:"CVE_data_version"`
 	CVEDataNumberOfCVEs string `json:"CVE_data_numberOfCVEs"`
 	CVEDataTimestamp    string `json:"CVE_data_timestamp"`
-    CVEItems            []CVE  `json:"CVE_Items" diff:"CVE_Items"`
+    CVEItems            []CVEItem  `json:"CVE_Items" diff:"CVE_Items"`
 }
 
-type CVE struct {
-    DataType    string `json:"data_type" diff:"data_type"`
-    DataFormat  string `json:"data_format" diff:"data_format"`
-    DataVersion string `json:"data_version" diff:"data_version"`
-    CVEDataMeta struct {
-        ID       string `json:"ID" diff:"ID"`
-        ASSIGNER string `json:"ASSIGNER" diff:"ASSIGNER"`
-    } `json:"CVE_data_meta" diff:"CVE_data_meta"`
-    Problemtype struct {
-        ProblemtypeData []struct {
-            Description []struct {
+type CVEItem struct {
+    CVE struct {
+        DataType    string `json:"data_type" diff:"data_type"`
+        DataFormat  string `json:"data_format" diff:"data_format"`
+        DataVersion string `json:"data_version" diff:"data_version"`
+        CVEDataMeta struct {
+            ID       string `json:"ID" diff:"ID"`
+            ASSIGNER string `json:"ASSIGNER" diff:"ASSIGNER"`
+        } `json:"CVE_data_meta" diff:"CVE_data_meta"`
+        Problemtype struct {
+            ProblemtypeData []struct {
+                Description []struct {
+                    Lang  string `json:"lang" diff:"lang"`
+                    Value string `json:"value" diff:"value"`
+                } `json:"description" diff:"description"`
+            } `json:"problemtype_data" diff:"problemtype_data"`
+        } `json:"problemtype" diff:"problemtype"`
+        References struct {
+            ReferenceData []struct {
+                URL       string   `json:"url" diff:"url"`
+                Name      string   `json:"name" diff:"name"`
+                Refsource string   `json:"refsource" diff:"refsource"`
+                Tags      []string `json:"tags" diff:"tags"`
+            } `json:"reference_data" diff:"reference_data"`
+        } `json:"references" diff:"references"`
+        Description struct {
+            DescriptionData []struct {
                 Lang  string `json:"lang" diff:"lang"`
                 Value string `json:"value" diff:"value"`
-            } `json:"description" diff:"description"`
-        } `json:"problemtype_data" diff:"problemtype_data"`
-    } `json:"problemtype" diff:"problemtype"`
-    References struct {
-        ReferenceData []struct {
-            URL       string   `json:"url" diff:"url"`
-            Name      string   `json:"name" diff:"name"`
-            Refsource string   `json:"refsource" diff:"refsource"`
-            Tags      []string `json:"tags" diff:"tags"`
-        } `json:"reference_data" diff:"reference_data"`
-    } `json:"references" diff:"references"`
-    Description struct {
-        DescriptionData []struct {
-            Lang  string `json:"lang" diff:"lang"`
-            Value string `json:"value" diff:"value"`
-        } `json:"description_data" diff:"description_data"`
-    } `json:"description" diff:"description"`
+            } `json:"description_data" diff:"description_data"`
+        } `json:"description" diff:"description"`
+    } `json:"cve" diff:"cve"`
     Configurations struct {
         CVEDataVersion string `json:"CVE_data_version" diff:"CVE_data_version"`
         Nodes          []struct {

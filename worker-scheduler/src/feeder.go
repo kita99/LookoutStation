@@ -2,6 +2,7 @@ package main
 
 import (
     "log"
+    "strconv"
 )
 
 func ProcessAllFeeds() {
@@ -15,28 +16,31 @@ func ProcessAllFeeds() {
 
     // Foreach one fetch the metadata url
     for _, feed := range feeds {
+        feedID := strconv.Itoa(feed.ID)
         feedMetadata, err := GetFeedSourceMetadata(feed.MetaURL)
 
         if err != nil {
             return
         }
 
-        feedTask, err := GetLastFeedTask(feed.ID)
+        feedTask, err := GetLastFeedTask(feedID)
 
         if err != nil {
             return
         }
 
         if feedTask == (FeedTask{}) {
-            status := PublishToQueue("feeds:populate", feed.ID)
+            status := PublishToQueue("feeds", feedID + ":populate")
 
             if !status {
                 return
             }
+
+            return
         }
 
         if feedTask.SHA256 != feedMetadata.SHA256 {
-            status := PublishToQueue("feeds", feed.ID)
+            status := PublishToQueue("feeds", feedID)
 
             if !status {
                 return

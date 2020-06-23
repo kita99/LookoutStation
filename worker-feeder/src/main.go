@@ -99,18 +99,18 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
         RawJSON: feedSourceData,
     }
 
-    feedTaskID, status := CreateFeedTask(feedTask)
-
-    if !status {
-        delivery.Reject()
-        delivery.Push()
-    }
-
     switch mode := payload.mode; mode {
     case "diff":
         lastFeedTask, err := GetLastFeedTask(payload.feedID)
 
         if err != nil {
+            delivery.Reject()
+            delivery.Push()
+        }
+
+        feedTaskID, status := CreateFeedTask(payload.feedID, feedTask)
+
+        if !status {
             delivery.Reject()
             delivery.Push()
         }
@@ -122,8 +122,8 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
             delivery.Push()
         }
 
-        var updates []responses.CVE
-        var creates []responses.CVE
+        var updates []responses.CVEItem
+        var creates []responses.CVEItem
         var matches []int
 
         for _, change := range changelog {
@@ -142,20 +142,42 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
             }
         }
 
-        if !StoreCVES(payload.feedID, feedTaskID, creates) {
-            delivery.Reject()
-            delivery.Push()
+        if len(creates) > 0 {
+            if !StoreCVES(payload.feedID, feedTaskID, creates) {
+                delivery.Reject()
+                delivery.Push()
+
+                return
+            }
         }
 
-        if !UpdateCVES(payload.feedID, feedTaskID, updates) {
-            delivery.Reject()
-            delivery.Push()
+        if len(updates) > 0 {
+            if !StoreCVES(payload.feedID, feedTaskID, updates) {
+                delivery.Reject()
+                delivery.Push()
+
+                return
+            }
         }
 
+        delivery.Ack()
     case "populate":
+        feedTaskID, status := CreateFeedTask(payload.feedID, feedTask)
+
+        if !status {
+            delivery.Reject()
+            delivery.Push()
+
+            return
+        }
+
         if !StoreCVES(payload.feedID, feedTaskID, feedSourceData.CVEItems) {
             delivery.Reject()
             delivery.Push()
+
+            return
         }
+
+        delivery.Ack()
     }
 }
