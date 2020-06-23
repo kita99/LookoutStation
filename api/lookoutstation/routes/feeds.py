@@ -2,6 +2,8 @@ from sqlalchemy import desc
 from flask import Blueprint
 from flask import request
 
+import json
+
 from lookoutstation.models import CVEImpactMetric
 from lookoutstation.models import CVEFeedTask
 from lookoutstation.models import CVEFeed
@@ -35,7 +37,7 @@ def get_single_feed(id):
     try:
         feed = CVEFeed.query.filter_by(id=id).first()
 
-        return {'feed_tasks': feed.as_dict()}
+        return feed.as_dict()
     except:
         db.session.rollback()
         return {'message': 'Internal server error'}, 500
@@ -105,21 +107,21 @@ def create_cve(id, task_id):
         for cve in cves:
             primary_bulk.append(CVE(
                 created_by_feed_task_id=task_id,
-                name=cve['CVE_data_meta']['ID'],
-                assigner=cve['CVE_data_meta']['ASSIGNER'],
-                description=cve['description']['description_data'][0]['value'],
+                name=cve['cve']['CVE_data_meta']['ID'],
+                assigner=cve['cve']['CVE_data_meta']['ASSIGNER'],
+                description=cve['cve']['description']['description_data'][0]['value'],
                 cve_modification_date=cve['lastModifiedDate'],
                 cve_publication_date=cve['publishedDate']
             ))
 
-            impact_metrics = helpers.extract_and_prepare(cve, cve['CVE_data_meta']['ID'])
-            cpes = helpers.cpe.find_and_parse(cve['configurations']['nodes'], cve['CVE_data_meta']['ID'])
+            impact_metrics = helpers.cve_impact_metric.extract_and_prepare(cve['impact'], cve['cve']['CVE_data_meta']['ID'])
+            cpes = helpers.cpe.find_and_parse(cve['configurations']['nodes'], cve['cve']['CVE_data_meta']['ID'])
 
             if impact_metrics:
-                secondary_bulk.append(impact_metrics)
+                secondary_bulk += impact_metrics
 
             if cpes:
-                secondary_bulk.append(cpes)
+                secondary_bulk += cpes
 
         db.session.bulk_save_objects(primary_bulk)
         db.session.commit()
@@ -149,17 +151,17 @@ def update_cve(id, task_id):
         for cve in cves:
             bulk = []
 
-            existing = CVE.query.filter_by(cve_name=cve['CVE_data_meta']['ID'])
+            existing = CVE.query.filter_by(cve_name=cve['cve']['CVE_data_meta']['ID'])
 
             existing.updated_by_feed_task_id = task_id
-            existing.description = cve['description']['description_data'][0]['value']
+            existing.description = cve['cve']['description']['description_data'][0]['value']
             existing.cve_modification_date = cve['lastModifiedDate']
 
-            CVEImpactMetric.query.filter_by(cve_name=cve['CVE_data_meta']['ID']).delete()
-            CPE.query.filter_by(cve_name=cve['CVE_data_meta']['ID']).delete()
+            CVEImpactMetric.query.filter_by(cve_name=cve['cve']['CVE_data_meta']['ID']).delete()
+            CPE.query.filter_by(cve_name=cve['cve']['CVE_data_meta']['ID']).delete()
 
-            impact_metrics = helpers.extract_and_prepare(cve, cve['CVE_data_meta']['ID'])
-            cpes = helpers.cpe.find_and_parse(cve['configurations']['nodes'], cve['CVE_data_meta']['ID'])
+            impact_metrics = helpers.extract_and_prepare(cve, cve['cve']['CVE_data_meta']['ID'])
+            cpes = helpers.cpe.find_and_parse(cve['configurations']['nodes'], cve['cve']['CVE_data_meta']['ID'])
 
             if impact_metrics:
                 bulk.append(impact_metrics)
@@ -181,6 +183,9 @@ def update_cve(id, task_id):
 def get_latest_feeds_task(id):
     try:
         feed_task = CVEFeedTask.query.filter_by(cve_feed_id=id).order_by(desc(CVEFeedTask.created_on)).first()
+
+        if not feed_task:
+            return {'message': 'No existing tasks for this feed'}, 404
 
         return {'feed_task': feed_task.as_dict()}
     except:

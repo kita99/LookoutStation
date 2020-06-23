@@ -47,8 +47,7 @@ def create_scan(public_ip):
         db.session.commit()
 
         return {'message': 'Scan created successfully'}
-    except Exception as e:
-        print(e)
+    except:
         db.session.rollback()
         return {'message': 'Internal server error'}, 500
 

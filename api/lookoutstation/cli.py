@@ -30,8 +30,7 @@ def dot_print(left, right):
 @commands.cli.command('tasks')
 @click.argument('command')
 def tasks(command):
-
-    if command == 'trigger-scheduler':
+    if command == 'scheduler':
         res = requests.get('http://lookoutstation-worker-scheduler/trigger')
 
         if res.status_code != 200:
@@ -41,7 +40,7 @@ def tasks(command):
 
         return
 
-    if command == 'list-queues':
+    if command == 'list':
         res = requests.get('http://lookoutstation-worker-master/queues')
 
         if res.status_code != 200:
@@ -54,19 +53,12 @@ def tasks(command):
         return
 
 
-    click.echo('Task command {command} not recognized')
+    click.echo(f'Task command {command} not recognized')
 
 
 @commands.cli.command('seed')
 @click.argument('entity')
 def seeds(entity):
-    AVAILABLE = ['feeds']
-
-    if entity not in AVAILABLE:
-        click.echo(f'{entity} is not recognized as a seedable entity')
-        return
-
-
     if entity == 'feeds':
         feeds = []
         description = '''  Each vulnerability in the feed includes a description and associated reference links
@@ -88,11 +80,13 @@ def seeds(entity):
             db.session.commit()
 
             click.echo('Successfully seeded CVEFeeds with feeds from NIST')
+            return
         except Exception as e:
-            print(e)
+            click.echo(e)
             click.echo('Whoops, something went wrong (no changes made)')
             db.session.rollback()
 
+    click.echo(f'{entity} is not recognized as a seedable entity')
 
 @commands.cli.command('db')
 @click.argument('action')
@@ -115,6 +109,7 @@ def database_actions(action):
         dot_print('Total Scans', Scan.query.count())
         dot_print('Total Ports', Port.query.count())
         dot_print('Total CVEs', CVE.query.count())
+        dot_print('Total CPEs', CPE.query.count())
         dot_print('Total CVE Feeds', CVEFeed.query.count())
         dot_print('Total CVE Feed Tasks', CVEFeedTask.query.count())
         dot_print('Total CVE Impact Metrics', CVEImpactMetric.query.count())

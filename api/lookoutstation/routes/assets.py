@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask import request
 
+from lookoutstation.helpers import authentication
 from lookoutstation.models import Asset
 from lookoutstation.models import Software
 from lookoutstation.app import db

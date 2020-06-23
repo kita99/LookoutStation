@@ -170,7 +170,7 @@ class CVE(db.Model):
 
     assigner = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.String(1200), nullable=True)
+    description = db.Column(db.String(5000), nullable=True)
 
     cve_modification_date = db.Column(db.DateTime, nullable=False)
     cve_publication_date = db.Column(db.DateTime, nullable=False)
