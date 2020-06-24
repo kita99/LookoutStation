@@ -36,7 +36,7 @@
               <q-td key="progress" :props="props">
                 <q-linear-progress stripe size="25px" :value="parseFloat(props.row.progress)" color="primary">
                   <div class="absolute-full flex flex-center">
-                    <q-badge color="teal" text-color="white" :label="(props.row.progress * 100).toFixed(1) + '%'" />
+                    <q-badge color="teal" text-color="white" :label="(props.row.progress).toFixed(1) + '%'" />
                   </div>
                 </q-linear-progress>
               </q-td>
@@ -94,11 +94,13 @@ export default {
   },
 
   methods: {
-    ...mapActions('scans', ['getOngoingScans'])
+    ...mapActions('scans', ['getOngoingScans']),
+    ...mapActions('statistics', ['getOverviewStatistics'])
   },
 
   mounted () {
     this.getOngoingScans()
+    this.getOverviewStatistics()
   },
 
   computed: {
