@@ -65,7 +65,7 @@ def create_user():
 @click.argument('command')
 @click.argument('subcommand', required=False)
 @click.argument('payload', required=False)
-def tasks(command, subcommand):
+def tasks(command, subcommand, payload):
     if command == 'publish':
         if subcommand and payload:
             res = requests.post(
