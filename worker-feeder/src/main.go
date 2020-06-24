@@ -6,6 +6,7 @@ import (
 	"time"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/adjust/rmq"
     "github.com/r3labs/diff"
@@ -13,9 +14,18 @@ import (
     "./responses"
 )
 
-const (
-	workers = 1
-)
+func getEnv(key string, fallback int) int {
+    value, exists := os.LookupEnv(key)
+
+    if !exists {
+        return fallback
+    }
+
+    int_value, _ := strconv.Atoi(value)
+    return int_value
+}
+
+
 
 func main() {
 	connection := rmq.OpenConnection("lookoustation-worker-feeder", "tcp", "lookoutstation-redis:6379", 1)
@@ -24,7 +34,7 @@ func main() {
 	queue.StartConsuming(10, 500*time.Millisecond)
     queue.SetPushQueue(queue)
 
-    for i := 0; i < workers; i++ {
+    for i := 0; i < getEnv("feeder-workers", 1); i++ {
 		workerName := fmt.Sprintf("worker-%d", i)
 		queue.AddConsumer(workerName, NewWorker(i))
 	}

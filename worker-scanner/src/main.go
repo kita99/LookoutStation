@@ -3,16 +3,14 @@ package main
 import (
     "math/rand"
     "context"
+    "strconv"
 	"time"
 	"log"
 	"fmt"
+    "os"
 
 	"github.com/adjust/rmq"
     "github.com/Ullaakut/nmap"
-)
-
-const (
-	workers = 1
 )
 
 type ScanResults struct {
@@ -21,6 +19,18 @@ type ScanResults struct {
     Progress float64 `json:"progress"`
     Ports string `json:"ports"`
 }
+
+func getEnv(key string, fallback int) int {
+    value, exists := os.LookupEnv(key)
+
+    if !exists {
+        return fallback
+    }
+
+    int_value, _ := strconv.Atoi(value)
+    return int_value
+}
+
 
 func main() {
     // seed to assure workerID randomness
@@ -32,7 +42,7 @@ func main() {
 	queue.StartConsuming(10, 500*time.Millisecond)
     queue.SetPushQueue(queue)
 
-    for i := 0; i < workers; i++ {
+    for i := 0; i < getEnv("scanner-workers", 10); i++ {
         workerID := GenerateRandomString(12)
 		workerName := fmt.Sprintf("worker-scanner-%s", workerID)
 		queue.AddConsumer(workerName, NewWorker(workerID))
