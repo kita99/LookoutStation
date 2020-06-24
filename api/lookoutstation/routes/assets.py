@@ -10,7 +10,7 @@ from lookoutstation.app import db
 assets = Blueprint('assets', __name__)
 
 
-@assets.route('/', methods=['GET'])
+@assets.route('', methods=['GET'])
 def get_all_assets():
     user = authentication.validate_token(request.headers.get('Authorization'))
     asset_list = []

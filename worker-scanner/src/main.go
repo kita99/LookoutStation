@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	workers = 10
+	workers = 1
 )
 
 type ScanResults struct {

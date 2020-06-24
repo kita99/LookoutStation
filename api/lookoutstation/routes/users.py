@@ -2,6 +2,7 @@ from passlib.hash import sha256_crypt
 from flask import Blueprint
 from flask import request
 
+from lookoutstation.helpers import authentication
 from lookoutstation.models import User
 from lookoutstation.app import db
 
