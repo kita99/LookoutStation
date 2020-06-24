@@ -20,30 +20,30 @@ func ProcessAllFeeds() {
         feedMetadata, err := GetFeedSourceMetadata(feed.MetaURL)
 
         if err != nil {
-            return
+            continue
         }
 
         feedTask, err := GetLastFeedTask(feedID)
 
         if err != nil {
-            return
+            continue
         }
 
         if feedTask == (FeedTask{}) {
             status := PublishToQueue("feeds", feedID + ":populate")
 
             if !status {
-                return
+                continue
             }
 
-            return
+            continue
         }
 
         if feedTask.SHA256 != feedMetadata.SHA256 {
             status := PublishToQueue("feeds", feedID)
 
             if !status {
-                return
+                continue
             }
         }
     }
