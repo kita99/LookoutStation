@@ -4,7 +4,8 @@ def __assign_values():
         'protocol': port['protocol'],
         'state': port['state']['state'],
         'reason': port['state']['reason'],
-        'service_name': port['service']['name']
+        'service_name': port['service']['name'],
+        'service_version': port['service']['version']
     }
 
     return result

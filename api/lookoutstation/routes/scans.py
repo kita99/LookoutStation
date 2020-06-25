@@ -126,10 +126,10 @@ def update_scan(public_ip):
 
             scan.ports.append(Port(
                 port=port['id'],
-                protocol='tcp',
-                service_name=None,
-                state=host['extra_ports'][0]['state'],
-                reason=host['extra_ports'][0]['reasons'][0]['reason']
+                protocol=port['protocol'],
+                service_name=port['service']['name'],
+                state=port['state']['state'],
+                reason=port['state']['reason']
             ))
 
     try:
