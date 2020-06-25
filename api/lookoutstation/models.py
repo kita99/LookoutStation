@@ -99,7 +99,8 @@ class Port(db.Model):
     port = db.Column(db.Integer, nullable=True)
     port_range = db.Column(postgresql.INT4RANGE, nullable=True)
     protocol = db.Column(db.String(5), nullable=True)
-    service_name = db.Column(db.String(10), nullable=True)
+    service_name = db.Column(db.String(255), nullable=True)
+    service_version = db.Column(db.String(50), nullable=True)
     state = db.Column(db.String(10), nullable=False)
     reason = db.Column(db.String(10), nullable=False)
 
