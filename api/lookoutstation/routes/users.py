@@ -46,7 +46,7 @@ def register():
 
         return {'message': 'Registration successful'}, 201
     except Exception as e:
-        #logging.error(e)
+        # logging.error(e)
         print(e)
         db.session.rollback()
         return {'message': 'Internal server error'}, 500

@@ -7,17 +7,18 @@ def serialize(obj, not_allowed_fields=False):
     data = {}
 
     for c in obj.__table__.columns:
-        if not_allowed_fields == False:
-            data[c.name] = getattr(obj, c.name) 
+        if not_allowed_fields is False:
+            data[c.name] = getattr(obj, c.name)
             continue
 
         if c.name not in not_allowed_fields:
-            data[c.name] = getattr(obj, c.name) 
+            data[c.name] = getattr(obj, c.name)
 
     return data
 
 
-SoftwareCVE = db.Table('cve_software',
+SoftwareCVE = db.Table(
+    'cve_software',
     db.Column('id', db.Integer, primary_key=True),
     db.Column('cve_id', db.Integer, db.ForeignKey('cves.id', ondelete="cascade")),
     db.Column('software_id', db.Integer, db.ForeignKey('software.id', ondelete="cascade")))
@@ -141,7 +142,7 @@ class CVEFeed(db.Model):
 
     def __repr__(self):
         return '<CVEFeed %r>' % self.name
-    
+
 
 class CVEFeedTask(db.Model):
     __tablename__ = 'cve_feed_tasks'
@@ -165,8 +166,8 @@ class CVEFeedTask(db.Model):
 
     def __repr__(self):
         return '<CVEFeedTask %r>' % self.sha256
-    
-    
+
+
 class CVE(db.Model):
     __tablename__ = 'cves'
 
@@ -192,7 +193,7 @@ class CVE(db.Model):
 
     def __repr__(self):
         return '<CVE %r>' % self.name
-    
+
 
 class CPE(db.Model):
     __tablename__ = 'cpes'
@@ -214,7 +215,7 @@ class CPE(db.Model):
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())
     updated_on = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    
+
     def as_dict(self):
         return serialize(self)
 

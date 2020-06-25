@@ -116,11 +116,9 @@ def update_scan(public_ip):
     if not scan:
         return {'message': 'This worker does not have any recently initiated scans'}, 404
 
-
     if '-' in ports:
         range_start, range_end = ports.split('-')
         is_port_range = True
-
 
     if host['ports'] and not host['extra_ports']:
         compact_ports = helpers.scan.compact(host)
@@ -140,7 +138,6 @@ def update_scan(public_ip):
                 reason=port['reason']
             ))
 
-
     if not host['ports'] and host['extra_ports']:
         scan.ports.append(Port(
             port=ports if not is_port_range else None,
@@ -151,19 +148,20 @@ def update_scan(public_ip):
             reason=host['extra_ports'][0]['reasons'][0]['reason']
         ))
 
-
     if host['ports'] and host['extra_ports']:
         for i, port in enumerate(host['ports']):
             if i != 0:
-                range_start = int(host['ports'][i-1]['id']) + 1
+                range_start = int(host['ports'][i - 1]['id']) + 1
 
-            scan.ports.append(Port(
-                port_range=NumericRange(int(range_start), int(port['id']) - 1),
-                protocol='tcp',
-                service_name=None,
-                state=host['extra_ports'][0]['state'],
-                reason=host['extra_ports'][0]['reasons'][0]['reason']
-            ))
+            scan.ports.append(
+                Port(
+                    port_range=NumericRange(int(range_start), int(port['id']) - 1),
+                    protocol='tcp',
+                    service_name=None,
+                    state=host['extra_ports'][0]['state'],
+                    reason=host['extra_ports'][0]['reasons'][0]['reason']
+                )
+            )
 
             scan.ports.append(Port(
                 port=port['id'],

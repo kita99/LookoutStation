@@ -26,4 +26,3 @@ setup(
         'Werkzeug==1.0.1'
     ]
 )
-

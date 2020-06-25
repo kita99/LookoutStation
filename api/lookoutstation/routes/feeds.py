@@ -172,7 +172,6 @@ def update_cve(id, task_id):
             db.session.bulk_save_objects(bulk)
             db.session.commit()
 
-
         return {'message': 'CVEs updated successfully'}
     except:
         db.session.rollback()

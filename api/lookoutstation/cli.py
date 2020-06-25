@@ -22,7 +22,7 @@ commands = Blueprint('commands', __name__)
 
 
 def dot_print(left, right):
-    dot_len = 35 
+    dot_len = 35
     l_len = len(left)
     dots = (dot_len - l_len) * '.'
 
@@ -83,7 +83,6 @@ def tasks(command, subcommand, payload):
 
             return
 
-
     if command == 'trigger':
         if subcommand == 'scheduler':
             res = requests.get('http://lookoutstation-worker-scheduler/trigger')
@@ -94,7 +93,6 @@ def tasks(command, subcommand, payload):
             click.echo('Scheduler triggered successfully!')
 
             return
-
 
     if command == 'queues':
         res = requests.get('http://lookoutstation-worker-master/queues')
@@ -108,7 +106,6 @@ def tasks(command, subcommand, payload):
 
         return
 
-
     if command == 'clear':
         res = requests.get('http://lookoutstation-worker-master/cleanup')
 
@@ -121,11 +118,9 @@ def tasks(command, subcommand, payload):
 
         return
 
-
     if not subcommand:
         click.echo(f'Task command "{command}" not recognized')
         return
-
 
     click.echo(f'Task command "{command} {subcommand}" not recognized')
 

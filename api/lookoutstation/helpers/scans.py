@@ -1,4 +1,4 @@
-def __assign_values():
+def __assign_values(port):
     result = {
         'range_start': port['id'],
         'protocol': port['protocol'],
@@ -11,13 +11,13 @@ def __assign_values():
     return result
 
 
-def compact():
+def compact(host):
     """
         Takes in an a list of ports and attempts to compact them into port ranges
         when certain conditions are met
     """
     result = []
-    
+
     for i, port in enumerate(host['ports']):
         if len(result) == 0:
             result.append({})
@@ -26,12 +26,12 @@ def compact():
             continue
 
         if (
-            result[-1]['protocol'] != port['protocol'] or 
+            result[-1]['protocol'] != port['protocol'] or
             result[-1]['state'] != port['state']['state'] or
             result[-1]['reason'] != port['state']['reason'] or
             result[-1]['service_name'] != port['service']['name']
         ):
-            result[-1]['range_end'] = host['ports'][i-1]['id']
+            result[-1]['range_end'] = host['ports'][i - 1]['id']
 
             result.append({})
             result[-1] = __assign_values(port)
