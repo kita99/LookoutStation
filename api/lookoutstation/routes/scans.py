@@ -145,3 +145,20 @@ def update_scan(public_ip):
         db.session.rollback()
         return {'message': 'Internal server error'}, 500
 
+
+@scans.route('/<public_ip>', methods=['DELETE'])
+def delete_scan(public_ip):
+    json_request = request.json
+
+    worker_code = json_request.get('worker_code')
+
+    if not worker_code:
+        return {'message': 'One or more parameters is malformed'}, 400
+
+    try:
+        Scan.query.filter_by(public_ip=public_ip, worker_code=worker_code).delete()
+
+        return {'message': 'Scan deleted successfully'}
+    except:
+        db.session.rollback()
+        return {'message': 'Internal server error'}, 500
