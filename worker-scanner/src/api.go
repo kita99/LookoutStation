@@ -70,3 +70,23 @@ func NotifyScanStart(workerID string, payload string) bool {
 
     return true
 }
+
+func DeleteScan(ipaddress string, workerID string) {
+    request := struct {
+        WorkerID string `json:"worker_code"`
+    }{
+        workerID,
+    }
+
+    json_request, err := json.Marshal(request)
+
+    resp, err := http.Post("http://lookoutstation-api/scans/" + ipaddress, "application/json", bytes.NewBuffer(json_request))
+
+    if err != nil {
+        log.Printf("Could not delete scan: %v", err)
+    }
+
+    if resp.StatusCode != 200 {
+        log.Println("Could not delete scan: ", resp.StatusCode)
+    }
+}

@@ -4,6 +4,7 @@ import (
     "math/rand"
     "context"
     "strconv"
+    "strings"
 	"time"
 	"log"
 	"fmt"
@@ -65,23 +66,44 @@ func NewWorker(workerID string) *Worker {
 	}
 }
 
-func (worker *Worker) Consume(delivery rmq.Delivery) {
-    payload := delivery.Payload()
-    log.Printf("Worker %s initiating scan with payload: %s", worker.ID, payload)
+type Payload struct {
+    ipaddress string
+    ports string
+}
 
-    status := NotifyScanStart(worker.ID, payload)
+func (worker *Worker) Consume(delivery rmq.Delivery) {
+    var payload Payload
+    rawPayload := delivery.Payload()
+    split := strings.Split(rawPayload, ":")
+
+    log.Printf("Worker %s initiating scan with payload: %s", worker.ID, rawPayload)
+
+    if strings.Contains(rawPayload, ":") {
+        payload = Payload{
+            ipaddress: split[0],
+            ports: split[1],
+        }
+    } else {
+        payload = Payload{
+            ipaddress: split[0],
+            ports: "-",
+        }
+    }
+
+    status := NotifyScanStart(worker.ID, rawPayload)
 
     if !status {
         delivery.Reject()
         delivery.Push()
 
+        DeleteScan(payload.ipaddress, worker.ID)
         return
     }
 
     ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
-    steps := StepifyScan(payload)
+    steps := StepifyScan(rawPayload)
 
     for _, step := range steps {
         scanner, err := nmap.NewScanner(
@@ -94,6 +116,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
             delivery.Reject()
             delivery.Push()
 
+            DeleteScan(payload.ipaddress, worker.ID)
             log.Printf("Unable to create nmap scanner: ", err)
             return
         }
@@ -104,6 +127,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
             delivery.Reject()
             delivery.Push()
 
+            DeleteScan(payload.ipaddress, worker.ID)
             log.Printf("Unable to run nmap scan: ", err)
             return
         }
@@ -121,6 +145,7 @@ func (worker *Worker) Consume(delivery rmq.Delivery) {
             delivery.Reject()
             delivery.Push()
 
+            DeleteScan(payload.ipaddress, worker.ID)
             return
         }
     }
