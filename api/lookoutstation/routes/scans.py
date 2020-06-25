@@ -25,6 +25,47 @@ def get_ongoing_scans():
         return {'message': 'Internal server error'}, 500
 
 
+@scans.route('/completed', methods=['GET'])
+def get_completed_scans():
+    try:
+        completed_scans = Scan.query.filter_by(progress=100).all()
+
+        return {'completed_scans': [scan.as_dict() for scan in completed_scans]}
+    except:
+        db.session.rollback()
+        return {'message': 'Internal server error'}, 500
+
+
+@scans.route('/<public_ip>', methods=['GET'])
+def get_scan_ports(public_ip):
+    result = []
+
+    try:
+        scans = Scan.query.filter_by(public_ip=public_ip, progress=100).all()
+
+        for scan in scans:
+            if scan.progress != 100:
+                continue
+
+            current = scan.as_dict()
+            current['open_ports'] = []
+            current['closed_ports'] = []
+
+            for port in scan.ports:
+                if port.state == 'open':
+                    current['open_ports'].append(port.as_dict())
+
+                if port.state == 'closed':
+                    current['closed_ports'].append(port.as_dict())
+
+            result.append(current)
+
+        return {'scans': scans}
+    except:
+        db.session.rollback()
+        return {'message': 'Internal server error'}, 500
+
+
 @scans.route('/<public_ip>', methods=['POST'])
 def create_scan(public_ip):
     json_request = request.json
