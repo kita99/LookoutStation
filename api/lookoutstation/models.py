@@ -200,7 +200,7 @@ class CPE(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     cve_name = db.Column(db.String(50), db.ForeignKey('cves.name', ondelete='CASCADE'))
-    cve = db.relationship('CVE', backref=db.backref('cves', lazy=True), cascade='all')
+    cve = db.relationship('CVE', backref=db.backref('cpes', lazy=True), cascade='all')
 
     part = db.Column(db.String(255), nullable=False)
     vendor = db.Column(db.String(255), nullable=False)
