@@ -60,7 +60,7 @@ class Client():
 
         insert_device = requests.post(_endpoint,
                                     json = {
-                                        'uuid': self.uuid,
+                                        'uuid': self.uuid.upper(),
                                         'hostname': self.hostname,
                                         'operating_system': self.operating_system,
                                         'kernel_version': self.kernel_version,
