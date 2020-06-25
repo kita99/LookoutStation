@@ -1,9 +1,10 @@
 from flask import Blueprint
 from flask import request
 
-from lookoutstation.helpers import authentication
-from lookoutstation.models import Asset
+from lookoutstation import helpers
 from lookoutstation.models import Software
+from lookoutstation.models import Asset
+from lookoutstation.models import CPE
 from lookoutstation.app import db
 
 
@@ -12,7 +13,7 @@ assets = Blueprint('assets', __name__)
 
 @assets.route('', methods=['GET'])
 def get_all_assets():
-    user = authentication.validate_token(request.headers.get('Authorization'))
+    user = helpers.authentication.validate_token(request.headers.get('Authorization'))
     asset_list = []
 
     if not user:
@@ -28,7 +29,7 @@ def get_all_assets():
 
 @assets.route('/<uuid>', methods=['GET'])
 def get_single_asset(uuid):
-    user = authentication.validate_token(request.headers.get('Authorization'))
+    user = helpers.authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
         return {'message': 'Authentication failure'}, 401
@@ -45,8 +46,7 @@ def get_single_asset(uuid):
 
 @assets.route('/<uuid>/software', methods=['GET'])
 def get_single_asset_software(uuid):
-    user = authentication.validate_token(request.headers.get('Authorization'))
-    software = []
+    user = helpers.authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
         return {'message': 'Authentication failure'}, 401
@@ -64,11 +64,11 @@ def get_single_asset_software(uuid):
 
 @assets.route('/ips/public', methods=['GET'])
 def get_all_assets_public_ips():
-    user = authentication.validate_token(request.headers.get('Authorization'))
+    user = helpers.uthentication.validate_token(request.headers.get('Authorization'))
     ips = []
 
     if not user:
-        return {'message': 'Authentication failure' }, 401
+        return {'message': 'Authentication failure'}, 401
 
     assets = Asset.query.all()
 
@@ -80,10 +80,10 @@ def get_all_assets_public_ips():
 
 @assets.route('/<uuid>/ips/public', methods=['GET'])
 def get_single_public_ip(uuid):
-    user = authentication.validate_token(request.headers.get('Authorization'))
+    user = helpers.authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
-        return {'message': 'Authentication failure' }, 401
+        return {'message': 'Authentication failure'}, 401
 
     asset = Asset.query.filter_by(uuid=uuid).first()
 
@@ -145,13 +145,29 @@ def update_asset(uuid):
         return {'message': 'One or more parameters is malformed'}, 400
 
     try:
-        for software in software_list:
-            software_entry = Software(
-                name=software['name'],
-                version=software['version']
-            )
+        for current in software_list:
+            result, software = helpers.software.check_for_match(asset.software, current)
 
-            asset.software.append(software_entry)
+            if not software:
+                software = Software(
+                    name=current['name'],
+                    version=current['version']
+                )
+
+            if result == 'update':
+                software.version = current['version']
+
+            cpes = CPE.query.filter_by(product=current['name'], version=current['version'])
+
+            for cpe in cpes:
+                for cve in cpes.cves:
+                    software.matched_cves.append(cve)
+
+            if result == 'no_match':
+                asset.software.append(software)
+                continue
+
+            db.session.add(software)
 
         db.session.add(asset)
         db.session.commit()
