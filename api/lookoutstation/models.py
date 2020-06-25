@@ -17,6 +17,12 @@ def serialize(obj, not_allowed_fields=False):
     return data
 
 
+CVESoftware = db.Table('cve_software',
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('cve_id', db.Integer, db.ForeignKey('cves.id', ondelete="cascade")),
+    db.Column('software_id', db.Integer, db.ForeignKey('software.id', ondelete="cascade")))
+
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -56,6 +62,7 @@ class Software(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     asset_id = db.Column(db.Integer, db.ForeignKey('assets.id', ondelete='CASCADE'))
     asset = db.relationship('Asset', backref=db.backref('software', lazy=True), cascade='all')
+    cves = db.relationship('CVE', secondary=SoftwareCVE, backref='software')
 
     name = db.Column(db.String(255), nullable=False)
     version = db.Column(db.String(80), nullable=False)
@@ -168,6 +175,7 @@ class CVE(db.Model):
     created_by_feed_task = db.relationship('CVEFeedTask', foreign_keys=[created_by_feed_task_id], backref=db.backref('cves_created', lazy=True), cascade='all')
     updated_by_feed_task_id = db.Column(db.Integer, db.ForeignKey('cve_feed_tasks.id', ondelete='CASCADE'))
     updated_by_feed_task = db.relationship('CVEFeedTask', foreign_keys=[updated_by_feed_task_id], backref=db.backref('cves_updated', lazy=True), cascade='all')
+    software = db.relationship('Software', secondary=SoftwareCVE, backref='cves')
 
     assigner = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(50), unique=True, nullable=False)
