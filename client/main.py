@@ -24,7 +24,7 @@ class Client():
     def __identifier(self):
         uuid = self.instance.client.query('select uuid from system_info').response[0]['uuid']
 
-        return uuid
+        return uuid.upper()
 
     def __hostname(self):
         hostname = self.instance.client.query('select hostname from system_info').response[0]['hostname']
@@ -60,7 +60,7 @@ class Client():
 
         insert_device = requests.post(_endpoint,
                                     json = {
-                                        'uuid': self.uuid.upper(),
+                                        'uuid': self.uuid,
                                         'hostname': self.hostname,
                                         'operating_system': self.operating_system,
                                         'kernel_version': self.kernel_version,
