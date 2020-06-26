@@ -160,8 +160,7 @@ def update_asset(uuid):
             cpes = CPE.query.filter_by(product=current['name'], version=current['version'])
 
             for cpe in cpes:
-                for cve in cpes.cves:
-                    software.matched_cves.append(cve)
+                software.matched_cves.append(cpe.cve)
 
             if result == 'no_match':
                 asset.software.append(software)
