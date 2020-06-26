@@ -80,13 +80,25 @@ func DeleteScan(ipaddress string, workerID string) {
 
     json_request, err := json.Marshal(request)
 
-    resp, err := http.Post("http://lookoutstation-api/scans/" + ipaddress, "application/json", bytes.NewBuffer(json_request))
+    client := &http.Client{}
+
+    req, err := http.NewRequest(http.MethodDelete, "http://lookoutstation-api/scans/" + ipaddress, bytes.NewBuffer(json_request))
 
     if err != nil {
-        log.Printf("Could not delete scan: %v", err)
+		log.Printf("Could not submit scan results: %s", err)
+        return
+    }
+
+    req.Header.Set("Content-Type", "application/json; charset=utf-8")
+    resp, err := client.Do(req)
+
+    if err != nil {
+		log.Printf("Could not delete scan: %s", err)
+        return
     }
 
     if resp.StatusCode != 200 {
         log.Println("Could not delete scan: ", resp.StatusCode)
+        return
     }
 }
