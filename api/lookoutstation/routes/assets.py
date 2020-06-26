@@ -4,6 +4,8 @@ from flask import request
 from lookoutstation import helpers
 from lookoutstation.models import Software
 from lookoutstation.models import Asset
+from lookoutstation.models import Scan
+from lookoutstation.models import Port
 from lookoutstation.models import CPE
 from lookoutstation.app import db
 
@@ -22,7 +24,26 @@ def get_all_assets():
     assets = Asset.query.all()
 
     for asset in assets:
-        asset_list.append(asset.as_dict())
+        current = {**asset.as_dict()}
+        current['cve_count'] = 0
+        current['open_port_count'] = 0
+
+        for software in asset.software:
+            if not software.matched_cves:
+                continue
+
+            current['cve_count'] += len(software.matched_cves)
+
+        scans = Scan.query.filter_by(public_ip=asset.public_ip, progress=100).all()
+
+        if scans:
+            for scan in scans:
+                current['open_port_count'] += Port.query.filter_by(scan=scan, state='open').filter(Port.port_range is None).count()
+
+                for range in Port.query.filter_by(scan=scan, state='open').filter(Port.port is None).all():
+                    current['open_port_count'] += (range.upper - range.lower)
+
+        asset_list.append(current)
 
     return {'assets': asset_list}
 
