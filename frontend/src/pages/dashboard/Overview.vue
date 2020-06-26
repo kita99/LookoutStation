@@ -6,11 +6,25 @@
       </div>
 
       <div class="col-3 dashboard-status-grid">
-        <StatusCard title="Vulnerabilities" icon="bug_report" :value="vulnerabilityCount" />
+        <StatusCard title="Vulnerabilities Found" icon="bug_report" :value="vulnerabilityCount" />
       </div>
 
       <div class="col-3 dashboard-status-grid">
-        <StatusCard title="Open Ports" icon="security" :value="openPortCount" />
+        <StatusCard title="Open Ports" icon="meeting_room" :value="openPortCount" />
+      </div>
+    </div>
+
+    <div class="row q-mt-md">
+      <div class="col-3 offset-1 dashboard-status-grid">
+        <StatusCard title="CVE Feeds" icon="integration_instructions" :value="feedCount" />
+      </div>
+
+      <div class="col-3 dashboard-status-grid">
+        <StatusCard title="CVEs" icon="security" :value="cveCount" />
+      </div>
+
+      <div class="col-3 dashboard-status-grid">
+        <StatusCard title="CPEs" icon="widgets" :value="cpeCount" />
       </div>
     </div>
 
@@ -108,7 +122,10 @@ export default {
       ongoingScans: state => state.scans.ongoingScans,
       assetCount: state => state.statistics.assetCount,
       vulnerabilityCount: state => state.statistics.vulnerabilityCount,
-      openPortCount: state => state.statistics.openPortCount
+      openPortCount: state => state.statistics.openPortCount,
+      feedCount: state => state.statistics.feedCount,
+      cveCount: state => state.statistics.cveCount,
+      cpeCount: state => state.statistics.cpeCount
     })
   }
 

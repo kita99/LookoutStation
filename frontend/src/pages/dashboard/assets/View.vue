@@ -56,6 +56,7 @@
         </q-tab-panel>
 
         <q-tab-panel name="security">
+          <p>asdfffffffffffasdfasdfadsf</p>
         </q-tab-panel>
       </q-tab-panels>
     </template>
