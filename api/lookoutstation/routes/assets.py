@@ -29,6 +29,8 @@ def get_all_assets():
 
 @assets.route('/<uuid>', methods=['GET'])
 def get_single_asset(uuid):
+    software = []
+    vulnerabilities = []
     user = helpers.authentication.validate_token(request.headers.get('Authorization'))
 
     if not user:
@@ -39,9 +41,23 @@ def get_single_asset(uuid):
     if not asset:
         return {'message': 'Asset with specified UUID does not exist'}, 404
 
-    software = [software.as_dict() for software in asset.software] if asset.software else None
+    if asset.software:
+        for s in asset.software:
+            software.append(s.as_dict())
 
-    return {'asset': {'software': software, **asset.as_dict()}}
+            if not s.matched_cves:
+                continue
+
+            for cve in s.matched_cves:
+                vulnerabilities.append(cve.as_dict())
+
+    return {
+        'asset': {
+            'software': software,
+            'vulnerabilities': vulnerabilities,
+            **asset.as_dict()
+        }
+    }
 
 
 @assets.route('/<uuid>/software', methods=['GET'])
