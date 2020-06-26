@@ -49,7 +49,16 @@ def get_single_asset(uuid):
                 continue
 
             for cve in s.matched_cves:
-                vulnerabilities.append(cve.as_dict())
+                vuln = {**cve.as_dict()}
+
+                for impact_metric in cve.impact_metrics:
+                    if impact_metric.cvss_version == '2.0':
+                        vuln['baseMetricV2'] = impact_metric.as_dict()
+
+                    if impact_metric.cvss_version == '3.1':
+                        vuln['baseMetricV3'] = impact_metric.as_dict()
+
+                vulnerabilities.append(vuln)
 
     return {
         'asset': {
