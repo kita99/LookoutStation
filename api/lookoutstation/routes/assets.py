@@ -162,7 +162,8 @@ def update_asset(uuid):
 
     try:
         for current in software_list:
-            result, software = helpers.software.check_for_match(asset.software, current)
+            action, software = helpers.software.check_for_match(asset.software, current)
+            new_cpe = False
 
             if not software:
                 software = Software(
@@ -170,19 +171,22 @@ def update_asset(uuid):
                     version=current['version']
                 )
 
-            if result == 'update':
+            if action == 'update':
                 software.version = current['version']
 
             cpes = CPE.query.filter_by(product=current['name'], version=current['version'])
 
             for cpe in cpes:
-                software.matched_cves.append(cpe.cve)
+                if not helpers.cve.check_for_match(software.matched_cves, cpe.cve):
+                    new_cpe = True
+                    software.matched_cves.append(cpe.cve)
 
-            if result == 'no_match':
+            if action == 'no_match':
                 asset.software.append(software)
                 continue
 
-            db.session.add(software)
+            if action == 'update' or new_cpe:
+                db.session.add(software)
 
         db.session.add(asset)
         db.session.commit()
