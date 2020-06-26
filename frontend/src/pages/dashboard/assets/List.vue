@@ -40,8 +40,8 @@ export default {
         { name: 'private_ip', label: 'Private IP', field: 'private_ip', sortable: true },
         { name: 'public_ip', label: 'Public IP', field: 'public_ip' },
         { name: 'operating_system', label: 'OS', field: 'operating_system' },
-        { name: 'cves', label: 'CVEs', field: 'cves' },
-        { name: 'open_ports', label: 'Open Ports', field: 'open_ports' }
+        { name: 'cves', label: 'CVEs', field: 'cve_count' },
+        { name: 'open_ports', label: 'Open Ports', field: 'open_port_count' }
       ]
     }
   },
