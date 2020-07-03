@@ -158,32 +158,15 @@ def seeds(entity):
     click.echo(f'{entity} is not recognized as a seedable entity')
 
 
-@commands.cli.command('db', help='Visualize or recreate the database')
-@click.argument('action')
-def database_actions(action):
-    if action == 'recreate':
-        try:
-            db.drop_all()
-            db.create_all()
-
-            click.echo('Database recreated successfully!')
-
-            return
-        except:
-            click.echo('Could not recreate database: ')
-
-    if action == 'overview':
-        dot_print('Total Users', User.query.count())
-        dot_print('Total Assets', Asset.query.count())
-        dot_print('Total Software', Software.query.count())
-        dot_print('Total Scans', Scan.query.count())
-        dot_print('Total Ports', Port.query.count())
-        dot_print('Total CVEs', CVE.query.count())
-        dot_print('Total CPEs', CPE.query.count())
-        dot_print('Total CVE Feeds', CVEFeed.query.count())
-        dot_print('Total CVE Feed Tasks', CVEFeedTask.query.count())
-        dot_print('Total CVE Impact Metrics', CVEImpactMetric.query.count())
-
-        return
-
-    click.echo(f'{action} is not recognized as a valid action')
+@commands.cli.command('stats', help='Visualize overall stats')
+def stats():
+    dot_print('Total Users', User.query.count())
+    dot_print('Total Assets', Asset.query.count())
+    dot_print('Total Software', Software.query.count())
+    dot_print('Total Scans', Scan.query.count())
+    dot_print('Total Ports', Port.query.count())
+    dot_print('Total CVEs', CVE.query.count())
+    dot_print('Total CPEs', CPE.query.count())
+    dot_print('Total CVE Feeds', CVEFeed.query.count())
+    dot_print('Total CVE Feed Tasks', CVEFeedTask.query.count())
+    dot_print('Total CVE Impact Metrics', CVEImpactMetric.query.count())
