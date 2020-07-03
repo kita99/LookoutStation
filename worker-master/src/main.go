@@ -13,6 +13,9 @@ func main() {
     r.HandleFunc("/queues", QueueStatusCheck).
         Methods("GET")
 
+    r.HandleFunc("/cleanup", PublishToQueue).
+        Methods("GET")
+
     r.HandleFunc("/publish", PublishToQueue).
         Methods("POST")
 

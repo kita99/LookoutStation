@@ -44,3 +44,13 @@ func PublishToQueue(w http.ResponseWriter, r *http.Request) {
     response.Message = "Message published"
     json.NewEncoder(w).Encode(response)
 }
+
+func CleanQueue(w http.ResponseWriter, r *http.Request) {
+    var response Response
+
+    Clean()
+
+    w.WriteHeader(http.StatusOK)
+    response.Message = "Cleanup successful"
+    json.NewEncoder(w).Encode(response)
+}

@@ -24,3 +24,10 @@ func CollectQueueStats() rmq.Stats {
 
     return queueStats
 }
+
+func Clean() {
+	connection := rmq.OpenConnection("lookoustation-worker-master", "tcp", "lookoutstation-redis:6379", 1)
+	cleaner := rmq.NewCleaner(connection)
+
+    cleaner.Clean()
+}
