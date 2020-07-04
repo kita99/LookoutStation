@@ -1,5 +1,4 @@
-configs/postgres.env
-configs/email.env
+src/configs/*.env
+!src/configs/*.example.env
 **/__pycache__
 **/lookoutstation_api.egg-info
-traefik/
