@@ -1,6 +1,5 @@
 # LookoutStation
 
-# Description
 LookoutStation is a CyberSecurity tool that focus on providing CSIRT teams insight into their assets. It gathers threats from various vulnerability feeds and cross-checks them against the output of automated NMAP scans or metrics provided by the CLI tool. 
 
 
