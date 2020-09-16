@@ -1,16 +1,7 @@
 # LookoutStation
 
-![](https://lookout.network/img/logo-black.335dd7d1.svg)
-
 # Description
-[LookoutStation](https://lookoutstation.network/) is a CyberSecurity tool that focus on providing CSIRT teams a complete inventory of each organization assets.
-
-It monitors newly added CVE's (using [NIST](https://www.nist.gov/) feeds) and tries to match them against installed software.
-
-## Live Demo
-
-   Username: `teste`
-   Password: `teste1234`
+LookoutStation is a CyberSecurity tool that focus on providing CSIRT teams insight into their assets. It gathers threats from various vulnerability feeds and cross-checks them against the output of automated NMAP scans or metrics provided by the CLI tool. 
 
 
 ## Requirements
@@ -18,26 +9,12 @@ It monitors newly added CVE's (using [NIST](https://www.nist.gov/) feeds) and tr
  - Docker and Docker-Compose
  - OSQuery 4.3+
 
-## Running
+## Setup
 
-    git clone ssh://git@gitlab.estig.ipb.pt:4589/a44721/lookoutstation.git
-    cd lookoutstation
-    docker-compose up --build
+Start by creating the required environment dotfiles, check the examples given by `.env.example` files
 
-Note: **configs/postgres.env** needs to be created. A configuration example is given on **configs/postgres.env.example**
- 
-## Compatibility
-The following Linux distros have been tested and confirmed to be working:
-- Ubuntu
-- Debian
-- Arch Linux
-
-## Languages
-
- - Python 3
- - Go Lang
- - JavaScript
- - VueJS
-
-## Infrastructure
-![Network Infrastructure](https://i.imgur.com/4usjjjr.png)
+```
+   git clone https://github.com/kita99/LookoutStation
+   cd lookoutstation
+   docker-compose up --build
+```
